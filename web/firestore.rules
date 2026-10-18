@@ -32,8 +32,14 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     match /candidates/{id} {
-      allow read: if signedIn();
+      allow read: if signedIn() || resultsPublic();
       allow write: if isStaff();
+    }
+    // Login audit trail (legacy userloginaccount)
+    match /loginlog/{id} {
+      allow read: if isAdmin();
+      allow create: if signedIn();
+      allow update, delete: if false;
     }
     match /positions/{id} { allow read: if signedIn(); allow write: if isAdmin(); }
     match /parties/{id}   { allow read: if signedIn(); allow write: if isAdmin(); }

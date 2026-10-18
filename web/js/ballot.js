@@ -1,17 +1,18 @@
 import { auth, signOut, signInAnonymously } from "./firebase.js";
 import {
-  getSettings, listCandidates, ballotPositionsForGrade, submitVotes,
-  fullName, REP_POSITIONS, ALL_POSITIONS
+  getSettings, listCandidates, getPositions, positionAppliesToGrade,
+  submitVotes, fullName, REP_POSITIONS
 } from "./data.js";
-import { $, $$, escapeHtml, toast, openModal, closeModal, btnLoading } from "./ui.js";
+import { $, escapeHtml, toast, openModal, btnLoading } from "./ui.js";
 
 let student = null;
 let settings = null;
 let positionsForBallot = [];
 let candidatesByPosition = {};
+let slotsByPosition = {};
 const selections = {}; // position -> [candidateId]
 
-function slotCount(position) { return REP_POSITIONS.includes(position) ? 2 : 1; }
+function slotCount(position) { return slotsByPosition[position] || (REP_POSITIONS.includes(position) ? 2 : 1); }
 
 function labelFor(position) {
   return position
@@ -52,7 +53,14 @@ async function init() {
   }
 
   const candidates = await listCandidates();
-  positionsForBallot = ballotPositionsForGrade(student.gradeLevel, settings.repsRule);
+  const positions = await getPositions();
+  slotsByPosition = {};
+  for (const p of positions) slotsByPosition[p.name] = p.slots || 1;
+  positionsForBallot = positions
+    .filter((p) => positionAppliesToGrade(p.scope, student.gradeLevel, p.name, settings.repsRule))
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+    .map((p) => p.name);
+
   candidatesByPosition = {};
   for (const c of candidates) {
     if (!positionsForBallot.includes(c.position)) continue;

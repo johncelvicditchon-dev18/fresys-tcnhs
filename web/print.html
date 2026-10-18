@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Print | FRESYS-TCNHS</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <style>
+    body { background: #eef1f6; color: #111; }
+    .doc { background: #fff; max-width: 900px; margin: 18px auto; padding: 28px 32px; border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,.08); }
+    .doc-head { text-align: center; margin-bottom: 18px; }
+    .doc-head h1 { font-size: 18px; margin: 0; letter-spacing: .3px; }
+    .doc-head .sub { font-size: 13px; margin-top: 3px; }
+    .doc-head .type { font-size: 14px; font-weight: 700; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; }
+    th { background: #f1f5f9; }
+    .slip-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .slip { border: 1.5px dashed #94a3b8; border-radius: 8px; padding: 12px; display: flex; gap: 12px; align-items: center; }
+    .slip .info { font-size: 12px; }
+    .slip .code { font-family: monospace; font-size: 20px; font-weight: 700; letter-spacing: 2px; }
+    .slip canvas { width: 88px; height: 88px; }
+    .toolbar-print { position: sticky; top: 0; background: #0f172a; color: #fff; padding: 10px 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .toolbar-print select, .toolbar-print button { padding: 7px 10px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: #fff; }
+    .toolbar-print button.primary { background: #2563eb; border-color: #2563eb; }
+    @media print {
+      body { background: #fff; }
+      .no-print { display: none !important; }
+      .doc { box-shadow: none; margin: 0; max-width: none; padding: 0; }
+      .slip-grid { grid-template-columns: repeat(2, 1fr); }
+      @page { margin: 14mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar-print no-print">
+    <strong>Print Preview</strong>
+    <span id="filterWrap" style="display:none">
+      <select id="fGrade"><option value="">All Grades</option></select>
+    </span>
+    <button class="primary" onclick="window.print()">Print</button>
+    <button onclick="window.close()">Close</button>
+    <span id="hint" style="opacity:.8;font-size:12.5px"></span>
+  </div>
+  <div id="root"></div>
+
+  <script type="module" src="js/print.js"></script>
+</body>
+</html>

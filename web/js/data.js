@@ -19,7 +19,7 @@
 import {
   db, auth,
   collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
-  query, where, orderBy, onSnapshot, writeBatch, serverTimestamp, deleteField
+  query, where, orderBy, limit, onSnapshot, writeBatch, serverTimestamp, deleteField, updatePassword
 } from "./firebase.js";
 
 export const COLLECTIONS = {
@@ -33,7 +33,8 @@ export const COLLECTIONS = {
   students: "students",
   votes: "votes",
   staff: "staff",
-  archive: "archive"
+  archive: "archive",
+  loginlog: "loginlog"
 };
 
 export const GRADES = ["Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"];
@@ -63,6 +64,28 @@ export const DEFAULT_SETTINGS = {
   resultsPublic: false,
   votingOpen: true
 };
+
+// Position scopes: "all" (every grade), "jhs" (Grade 7-9), "shs" (Grade 10-12),
+// "rep" (grade representative, 2 slots).
+export const POSITION_SCOPES = [
+  { value: "all", label: "All grades (executive)" },
+  { value: "jhs", label: "Junior High (Grade 7-9)" },
+  { value: "shs", label: "Senior High (Grade 10-12)" },
+  { value: "rep", label: "Grade representative (2 slots)" }
+];
+
+export const DEFAULT_POSITIONS = [
+  ...EXEC_POSITIONS.map((name) => ({ name, scope: "all", slots: 1 })),
+  ...JHS_POSITIONS.map((name) => ({ name, scope: "jhs", slots: 1 })),
+  ...SHS_POSITIONS.map((name) => ({ name, scope: "shs", slots: 1 })),
+  ...REP_POSITIONS.map((name) => ({ name, scope: "rep", slots: 2 }))
+].map((p, i) => ({ ...p, order: i + 1 }));
+
+export const scopeForPosition = (name) => {
+  const d = DEFAULT_POSITIONS.find((p) => p.name === name);
+  return d ? d.scope : (REP_POSITIONS.includes(name) ? "rep" : "all");
+};
+
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -130,6 +153,105 @@ export async function updateLookup(name, id, payload) {
 export async function deleteLookup(name, id) {
   await deleteDoc(doc(db, COLLECTIONS[name], id));
 }
+
+// ---------------------------------------------------------------------------
+// Positions (configurable). Falls back to the SSLG defaults when unseeded.
+// ---------------------------------------------------------------------------
+export async function getPositions() {
+  let items = [];
+  try { items = await listPositions(); } catch (_) { items = []; }
+  if (!items.length) {
+    return DEFAULT_POSITIONS.map((p, i) => ({ id: `default-${i}`, ...p }));
+  }
+  return items.map((p, i) => ({ ...p, scope: p.scope || scopeForPosition(p.name), slots: p.slots || 1, order: p.order || i + 1 }));
+}
+
+export async function addPosition({ name, scope, slots }) {
+  const existing = await getPositions();
+  const order = existing.length ? Math.max(...existing.map((p) => p.order || 0)) + 1 : 1;
+  return addLookup("positions", { name, scope: scope || "all", slots: Number(slots) || 1, order });
+}
+export async function updatePosition(id, patch) { return updateLookup("positions", id, patch); }
+export async function deletePosition(id) { return deleteLookup("positions", id); }
+
+// Grade applicability for a position (used by the ballot).
+export function positionAppliesToGrade(scope, gradeLevel, positionName, repsRule) {
+  const idx = GRADES.indexOf(gradeLevel);
+  const isJHS = idx >= 0 && idx <= 2;
+  if (scope === "all") return true;
+  if (scope === "jhs") return isJHS;
+  if (scope === "shs") return !isJHS;
+  if (scope === "rep") {
+    const target = repsRule === "next" ? GRADES[idx + 1] : gradeLevel;
+    return positionName === `${target} Representative`;
+  }
+  return true;
+}
+
+// ---------------------------------------------------------------------------
+// One-time seeding / bootstrap of configuration collections
+// ---------------------------------------------------------------------------
+export async function ensureSeed() {
+  const created = [];
+  const setSnap = await getDoc(doc(db, COLLECTIONS.settings, "main"));
+  if (!setSnap.exists()) { await setDoc(doc(db, COLLECTIONS.settings, "main"), { ...DEFAULT_SETTINGS }); created.push("settings"); }
+
+  const positions = await listPositions().catch(() => []);
+  if (!positions.length) {
+    for (const p of DEFAULT_POSITIONS) await addLookup("positions", p);
+    created.push("positions");
+  }
+  const years = await listYears().catch(() => []);
+  if (!years.length) { await addLookup("years", { name: DEFAULT_SETTINGS.academicYear }); created.push("years"); }
+  return created;
+}
+
+// Duplicate verification-code guard (legacy check_duplicate_codes)
+export async function isCodeTaken(code, exceptStudentId) {
+  const key = String(code || "").trim();
+  if (!key) return false;
+  const snap = await getDoc(doc(db, COLLECTIONS.codes, key));
+  if (!snap.exists()) return false;
+  return snap.data().studentId !== exceptStudentId;
+}
+
+// ---------------------------------------------------------------------------
+// Public-safe stats: counts only what anonymous visitors may read (votes).
+// ---------------------------------------------------------------------------
+export async function getPublicStats() {
+  const votes = await listVotes();
+  return { casted: votes.length };
+}
+
+// ---------------------------------------------------------------------------
+// Login audit trail (legacy userloginaccount)
+// ---------------------------------------------------------------------------
+export async function logLogin({ username, name, role, action }) {
+  try {
+    await addDoc(collection(db, COLLECTIONS.loginlog), {
+      username: String(username || "").trim().toLowerCase(),
+      name: name || "", role: role || "", action: action || "login",
+      userAgent: (typeof navigator !== "undefined" && navigator.userAgent) || "",
+      at: serverTimestamp()
+    });
+  } catch (_) { /* audit logging must never block login */ }
+}
+
+export async function listLoginLog() {
+  const snap = await getDocs(collection(db, COLLECTIONS.loginlog));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.at?.seconds || 0) - (a.at?.seconds || 0));
+}
+
+// ---------------------------------------------------------------------------
+// Change the signed-in staff member's own password.
+// ---------------------------------------------------------------------------
+export async function changeOwnPassword(newPassword) {
+  if (!auth.currentUser) throw new Error("You must be signed in.");
+  if ((newPassword || "").length < 6) throw new Error("Password must be at least 6 characters.");
+  await updatePassword(auth.currentUser, newPassword);
+}
+
 
 // ---------------------------------------------------------------------------
 // Candidates
@@ -322,6 +444,25 @@ export function computeWinners(results) {
     for (const c of ranked) winners.push({ position, ...c, slots });
   }
   return winners.sort((a, b) => POSITION_ORDER(a.position) - POSITION_ORDER(b.position));
+}
+
+// Per-grade winners (legacy gradelevelresult_tablee): for every grade, the
+// top candidate(s) of each position based only on that grade's votes.
+export function computeGradeWinners(results) {
+  const out = [];
+  for (const { position, candidates } of results) {
+    const slots = REP_POSITIONS.includes(position) ? 2 : 1;
+    for (const grade of GRADES) {
+      candidates
+        .map((c) => ({ position, grade, name: c.name, party: c.party, photo: c.photo, total: c.byGrade[grade] || 0 }))
+        .filter((r) => r.total > 0)
+        .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name))
+        .slice(0, slots)
+        .forEach((r) => out.push(r));
+    }
+  }
+  return out.sort((a, b) => GRADES.indexOf(a.grade) - GRADES.indexOf(b.grade) ||
+    POSITION_ORDER(a.position) - POSITION_ORDER(b.position));
 }
 
 // ---------------------------------------------------------------------------

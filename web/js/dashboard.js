@@ -2,22 +2,27 @@ import { auth, signOut, onSnapshot, collection, db } from "./firebase.js";
 import { requireStaff } from "./auth.js";
 import * as D from "./data.js";
 import {
-  $, $$, escapeHtml, toast, openModal, closeModal, btnLoading, fileToDataUrl, fmtDate
+  $, $$, escapeHtml, toast, openModal, closeModal, btnLoading, fileToDataUrl, fmtDate, showAlert, hideAlert
 } from "./ui.js";
 
 let profile = null;
 let candidates = [];
 let students = [];
 let staffList = [];
+let positionsList = [];
+let loginLog = [];
 let settings = null;
-let candTerm = "", stuTerm = "", accTerm = "";
+let candTerm = "", stuTerm = "", accTerm = "", logTerm = "", stuGradeFilter = "";
 let editPhoto = null;
+let stuPage = 1;
+const STU_PAGE = 100;
 
 const VIEW_META = {
   overview: ["Overview", "Election at a glance"],
   candidates: ["Candidates", "Manage registered candidates"],
   students: ["Students", "Registered voters and verification codes"],
   accounts: ["Accounts", "Approve and manage staff access"],
+  loginlog: ["Login Log", "Recent staff sign-ins"],
   settings: ["Settings", "Election configuration"],
   archive: ["Archive", "Past election results"]
 };
@@ -27,23 +32,32 @@ window.doLogout = () => signOut(auth).finally(() => location.replace("login.html
 // ---------------------------------------------------------------- bootstrap
 async function main() {
   profile = await requireStaff();
-  document.body.classList.toggle("is-admin", profile.role === "Admin");
+  const isAdmin = profile.role === "Admin";
+  document.body.classList.toggle("is-admin", isAdmin);
   $("#userName").textContent = profile.name || profile.username;
   $("#userRole").textContent = profile.role;
+
+  if (isAdmin) { try { await D.ensureSeed(); } catch (_) {} }
+  await loadPositions();
 
   setupNav();
   settings = await D.getSettings();
   fillSettingsForm(settings);
-  await fillLookupOptions();
+  await refreshLookups();
 
   watchCandidates();
   watchStudents();
-  if (profile.role === "Admin") watchStaff();
+  if (isAdmin) watchStaff();
   watchOverview();
   renderArchive();
 
   $("#loading").style.display = "none";
   $("#app").style.display = "";
+}
+
+async function loadPositions() {
+  try { positionsList = await D.getPositions(); } catch (_) { positionsList = []; }
+  if (!positionsList.length) positionsList = D.DEFAULT_POSITIONS.map((p, i) => ({ id: `default-${i}`, ...p }));
 }
 
 function setupNav() {
@@ -59,6 +73,7 @@ function switchView(view) {
   $("#viewSub").textContent = s;
   $("#sidebar").classList.remove("open");
   if (view === "archive") renderArchive();
+  if (view === "loginlog") renderLoginLog();
 }
 
 // ---------------------------------------------------------------- overview
@@ -135,9 +150,9 @@ function renderCandidates() {
 
 window.openCandidate = async function (id) {
   editPhoto = null;
-  const modal = $("#candidateModal");
+  const names = positionsList.length ? positionsList.map((p) => p.name) : D.ALL_POSITIONS;
   const posSel = $("#candPosition");
-  posSel.innerHTML = D.ALL_POSITIONS.map((p) => `<option>${p}</option>`).join("");
+  posSel.innerHTML = names.map((p) => `<option>${escapeHtml(p)}</option>`).join("");
   $("#candPreview").src = "assets/pictures/user_candidate.jpg";
   if (id) {
     const c = candidates.find((x) => x.id === id);
@@ -145,7 +160,7 @@ window.openCandidate = async function (id) {
     $("#candModalTitle").textContent = "Edit Candidate";
     $("#candId").value = c.id;
     $("#candName").value = c.name || "";
-    posSel.value = c.position || D.ALL_POSITIONS[0];
+    posSel.value = c.position || names[0];
     $("#candParty").value = c.party || "";
     $("#candYear").value = c.year || settings.academicYear;
     if (c.photo) $("#candPreview").src = c.photo;
@@ -153,7 +168,7 @@ window.openCandidate = async function (id) {
     $("#candModalTitle").textContent = "Add Candidate";
     $("#candId").value = "";
     $("#candName").value = "";
-    posSel.value = D.ALL_POSITIONS[0];
+    posSel.value = names[0];
     $("#candParty").value = "";
     $("#candYear").value = settings.academicYear;
   }
@@ -198,14 +213,20 @@ window.removeCandidate = function (id, name) {
 };
 
 // ---------------------------------------------------------------- students
-function renderStudents() {
+function filteredStudents() {
   const term = stuTerm.toLowerCase();
-  const rows = students.filter((s) => {
+  return students.filter((s) => {
+    if (stuGradeFilter && s.gradeLevel !== stuGradeFilter) return false;
     const name = D.fullName(s).toLowerCase();
     return !term || name.includes(term) || (s.code || "").toLowerCase().includes(term) ||
       (s.gradeLevel || "").toLowerCase().includes(term) || (s.section || "").toLowerCase().includes(term);
   });
-  $("#stuBody").innerHTML = rows.length ? rows.slice(0, 500).map((s) => `
+}
+
+function renderStudents() {
+  const rows = filteredStudents();
+  const shown = rows.slice(0, stuPage * STU_PAGE);
+  $("#stuBody").innerHTML = shown.length ? shown.map((s) => `
     <tr>
       <td><code>${escapeHtml(s.code || "-")}</code></td>
       <td>${escapeHtml(D.fullName(s))}</td>
@@ -217,13 +238,13 @@ function renderStudents() {
         <button class="btn btn-danger btn-sm" onclick="removeStudent('${s.id}','${escapeHtml(D.fullName(s)).replace(/'/g, "\\'")}')"><i class="ph ph-trash"></i></button>
       </div></td>
     </tr>`).join("") : `<tr><td colspan="6"><div class="empty"><i class="ph ph-student"></i>No students found.</div></td></tr>`;
+  $("#stuMore").style.display = shown.length < rows.length ? "" : "none";
+  $("#stuCount").textContent = `Showing ${shown.length} of ${rows.length} student(s)`;
 }
+window.loadMoreStudents = () => { stuPage += 1; renderStudents(); };
 
 window.generateCode = function () {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  $("#stuCode").value = code;
+  $("#stuCode").value = genCode();
 };
 
 window.openStudent = function (id) {
@@ -241,7 +262,6 @@ window.openStudent = function (id) {
     $("#stuCode").value = s.code || "";
   } else {
     $("#stuModalTitle").textContent = "Add Student";
-    $("#stuForm") && $("#stuForm").reset();
     ["stuFirst", "stuMiddle", "stuLast", "stuSection", "stuCode"].forEach((k) => ($("#" + k).value = ""));
     $("#stuGender").value = ""; $("#stuGrade").value = ""; $("#stuId").value = "";
     generateCode();
@@ -263,9 +283,11 @@ window.saveStudent = async function () {
   if (!payload.firstName || !payload.lastName) { toast("First and last name are required.", "error"); return; }
   if (!payload.gradeLevel) { toast("Grade level is required.", "error"); return; }
   if (!payload.code) { toast("Verification code is required.", "error"); return; }
+
   const btn = $("#stuSave");
   btnLoading(btn, true);
   try {
+    if (await D.isCodeTaken(payload.code, id || null)) throw new Error("That verification code is already used by another student.");
     if (id) await D.updateStudent(id, payload);
     else await D.addStudent(payload);
     toast(id ? "Student updated." : "Student added.", "success");
@@ -281,31 +303,44 @@ window.removeStudent = function (id, name) {
   });
 };
 
+$("#bulkFile").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => { $("#bulkText").value = String(reader.result || "").trim(); };
+  reader.onerror = () => toast("Could not read that file.", "error");
+  reader.readAsText(file);
+});
+
 window.importBulk = async function () {
   const raw = $("#bulkText").value.trim();
   const alertEl = $("#bulkAlert");
   const btn = $("#bulkSave");
-  if (!raw) { toast("Paste at least one student.", "error"); return; }
+  if (!raw) { toast("Paste or upload at least one student.", "error"); return; }
   const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   btnLoading(btn, true);
   let ok = 0, fail = 0;
-  for (const line of lines) {
+  const usedCodes = new Set(students.map((s) => (s.code || "").trim()).filter(Boolean));
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+    if (i === 0 && /first.?name/i.test(line)) continue; // skip CSV header
     const parts = line.split(",").map((p) => p.trim());
-    const [firstName, middleName, lastName, gender, gradeLevel, section, code] = parts;
+    const [firstName, middleName, lastName, gender, gradeLevel, section] = parts;
+    let code = parts[6] || "";
     if (!firstName || !lastName || !gradeLevel) { fail++; continue; }
+    if (!code) { do { code = genCode(); } while (usedCodes.has(code)); }
+    if (usedCodes.has(code)) { fail++; continue; }
     try {
-      await D.addStudent({
-        firstName, middleName: middleName || "", lastName, gender: gender || "",
-        gradeLevel, section: section || "", code: code || genCode()
-      });
+      if (await D.isCodeTaken(code, null)) { fail++; continue; }
+      await D.addStudent({ firstName, middleName: middleName || "", lastName, gender: gender || "", gradeLevel, section: section || "", code });
+      usedCodes.add(code);
       ok++;
     } catch (_) { fail++; }
   }
   btnLoading(btn, false, "Import Students");
-  alertEl.className = "alert alert-success show";
-  alertEl.innerHTML = `<i class="ph ph-check-circle"></i><span>Imported ${ok} student(s)${fail ? `, ${fail} skipped` : ""}.</span>`;
+  showAlert(alertEl, `Imported ${ok} student(s)${fail ? `, ${fail} skipped` : ""}.`, fail ? "warning" : "success");
   toast(`Imported ${ok} students.`, "success");
-  setTimeout(() => { closeModal("bulkModal"); $("#bulkText").value = ""; alertEl.className = "alert"; }, 1400);
+  if (ok) setTimeout(() => { closeModal("bulkModal"); $("#bulkText").value = ""; $("#bulkFile").value = ""; hideAlert(alertEl); }, 1600);
 };
 
 function genCode() {
@@ -334,6 +369,7 @@ function renderAccounts() {
       <td>${statusBadge(s.status)}</td>
       <td>${fmtDate(s.createdAt)}</td>
       <td><div class="actions">
+        <button class="btn btn-ghost btn-sm" onclick="openStaff('${s.id}')"><i class="ph ph-pencil-simple"></i></button>
         ${s.status !== "Approved" ? `<button class="btn btn-success btn-sm" onclick="setStaffStatus('${s.id}','Approved')"><i class="ph ph-check"></i></button>` : ""}
         ${s.status === "Approved" ? `<button class="btn btn-ghost btn-sm" onclick="setStaffStatus('${s.id}','Deactivated')"><i class="ph ph-prohibit"></i></button>` : ""}
         ${s.id !== profile.id ? `<button class="btn btn-danger btn-sm" onclick="removeStaff('${s.id}','${escapeHtml(s.name || s.username)}')"><i class="ph ph-trash"></i></button>` : ""}
@@ -347,6 +383,26 @@ function statusBadge(status) {
   return '<span class="badge badge-red">Deactivated</span>';
 }
 
+window.openStaff = function (id) {
+  const s = staffList.find((x) => x.id === id);
+  if (!s) return;
+  $("#staffId").value = s.id;
+  $("#staffName").value = s.name || "";
+  $("#staffRole").value = s.role || "Adviser";
+  openModal("staffModal");
+};
+window.saveStaff = async function () {
+  const id = $("#staffId").value;
+  const btn = $("#staffSave");
+  btnLoading(btn, true);
+  try {
+    await D.updateStaffProfile(id, { name: $("#staffName").value.trim(), role: $("#staffRole").value });
+    toast("Account updated.", "success");
+    closeModal("staffModal");
+  } catch (err) { toast(err.message || "Update failed.", "error"); }
+  finally { btnLoading(btn, false, "Save"); }
+};
+
 window.setStaffStatus = async function (uid, status) {
   try { await D.updateStaffStatus(uid, status); toast(`Account ${status.toLowerCase()}.`, "success"); }
   catch (err) { toast(err.message || "Update failed.", "error"); }
@@ -358,11 +414,59 @@ window.removeStaff = function (uid, name) {
   });
 };
 
+// ---------------------------------------------------------------- login log
+async function renderLoginLog() {
+  if (!profile || profile.role !== "Admin") return;
+  try {
+    loginLog = await D.listLoginLog();
+  } catch (err) {
+    $("#logBody").innerHTML = `<tr><td colspan="5"><div class="empty">${escapeHtml(err.message || "Could not load log.")}</div></td></tr>`;
+    return;
+  }
+  const term = logTerm.toLowerCase();
+  const rows = loginLog.filter((l) =>
+    !term || (l.username || "").toLowerCase().includes(term) || (l.name || "").toLowerCase().includes(term) || (l.action || "").toLowerCase().includes(term));
+  $("#logBody").innerHTML = rows.length ? rows.map((l) => `
+    <tr>
+      <td>${fmtDate(l.at)}</td>
+      <td><code>${escapeHtml(l.username || "-")}</code></td>
+      <td>${escapeHtml(l.name || "-")}</td>
+      <td>${escapeHtml(l.role || "-")}</td>
+      <td><span class="badge badge-blue">${escapeHtml(l.action || "login")}</span></td>
+    </tr>`).join("") : `<tr><td colspan="5"><div class="empty"><i class="ph ph-clock-counter-clockwise"></i>No login records yet.</div></td></tr>`;
+}
+window.renderLoginLog = renderLoginLog;
+
+// ---------------------------------------------------------------- password
+window.openPassword = function () {
+  $("#newPassword").value = ""; $("#confirmPassword").value = ""; hideAlert($("#pwAlert"));
+  openModal("passwordModal");
+};
+window.savePassword = async function () {
+  const pw = $("#newPassword").value, cf = $("#confirmPassword").value;
+  const alertEl = $("#pwAlert");
+  if (pw.length < 6) { showAlert(alertEl, "Password must be at least 6 characters.", "error"); return; }
+  if (pw !== cf) { showAlert(alertEl, "Passwords do not match.", "error"); return; }
+  const btn = $("#pwSave");
+  btnLoading(btn, true);
+  try {
+    await D.changeOwnPassword(pw);
+    showAlert(alertEl, "Password updated.", "success");
+    toast("Password updated.", "success");
+    setTimeout(() => closeModal("passwordModal"), 1200);
+  } catch (err) { showAlert(alertEl, err.message || "Update failed.", "error"); }
+  finally { btnLoading(btn, false, "Update Password"); }
+};
+
 // ---------------------------------------------------------------- settings
-async function fillLookupOptions() {
+async function refreshLookups() {
   try {
     const parties = await D.listParties();
     $("#partyList").innerHTML = parties.map((p) => `<option value="${escapeHtml(p.name)}"></option>`).join("");
+  } catch (_) {}
+  try {
+    const sections = await D.listSections();
+    $("#sectionList").innerHTML = sections.map((s) => `<option value="${escapeHtml(s.name)}"></option>`).join("");
   } catch (_) {}
 }
 
@@ -388,37 +492,120 @@ window.saveSettingsForm = async function () {
   catch (err) { toast(err.message || "Save failed.", "error"); }
 };
 
+window.seedDefaults = function () {
+  confirmAction("Initialize default data?", "Creates default settings, positions, and academic year if they do not exist. Existing entries are kept.", async () => {
+    try {
+      const created = await D.ensureSeed();
+      toast(created.length ? `Initialized: ${created.join(", ")}.` : "Everything is already set up.", "success");
+      await loadPositions();
+      settings = await D.getSettings();
+      fillSettingsForm(settings);
+      renderOverview();
+    } catch (err) { toast(err.message || "Failed.", "error"); }
+  });
+};
+
 let lookupKind = null;
 window.manageLookup = async function (kind) {
   lookupKind = kind;
   $("#lookupTitle").textContent = `Manage ${kind[0].toUpperCase() + kind.slice(1)}`;
+  renderLookupExtra();
+  $("#lookupInput").value = "";
   await renderLookup();
   openModal("lookupModal");
 };
+
+function renderLookupExtra() {
+  const host = $("#lookupExtra");
+  if (lookupKind === "positions") {
+    host.innerHTML = `
+      <div class="grid cols-2" style="gap:12px;margin-bottom:10px">
+        <div><label class="lbl">Scope</label>
+          <select class="input-inline" id="lookupScope">${D.POSITION_SCOPES.map((s) => `<option value="${s.value}">${s.label}</option>`).join("")}</select>
+        </div>
+        <div><label class="lbl">Slots (winners)</label>
+          <input class="input-inline" id="lookupSlots" type="number" min="1" value="1" />
+        </div>
+      </div>`;
+  } else if (lookupKind === "sections") {
+    host.innerHTML = `<label class="lbl">Grade Level</label>
+      <select class="input-inline" id="lookupGrade" style="margin-bottom:10px">
+        <option value="">Any</option>${D.GRADES.map((g) => `<option>${g}</option>`).join("")}
+      </select>`;
+  } else {
+    host.innerHTML = "";
+  }
+}
+
 async function renderLookup() {
-  const listFn = { parties: D.listParties, years: D.listYears, sections: D.listSections }[lookupKind];
-  const items = await listFn();
+  let items = [];
+  try {
+    if (lookupKind === "positions") items = await D.listPositions();
+    else if (lookupKind === "parties") items = await D.listParties();
+    else if (lookupKind === "years") items = await D.listYears();
+    else items = await D.listSections();
+  } catch (err) { items = []; toast(err.message || "Could not load entries.", "error"); }
+
+  if (lookupKind === "positions" && !items.length) {
+    $("#lookupList").innerHTML = '<p class="muted" style="font-size:13px">No positions yet. Add one below, or click "Initialize Default Data" in Settings.</p>';
+    return;
+  }
   $("#lookupList").innerHTML = items.length ? items.map((i) => `
     <div class="lookup-item">
-      <span>${escapeHtml(i.name)}${i.gradeLevel ? ` <span class="muted">(${escapeHtml(i.gradeLevel)})</span>` : ""}</span>
-      <button onclick="delLookupEntry('${i.id}')"><i class="ph ph-trash"></i></button>
+      <span>${escapeHtml(i.name)}${i.gradeLevel ? ` <span class="muted">(${escapeHtml(i.gradeLevel)})</span>` : ""}${i.scope ? ` <span class="muted">[${escapeHtml(i.scope)}]</span>` : ""}${i.slots ? ` <span class="muted">· ${i.slots} slot(s)</span>` : ""}</span>
+      <span style="display:flex;gap:6px">
+        <button onclick="editLookupEntry('${i.id}','${escapeHtml(i.name).replace(/'/g, "\\'")}')" title="Rename"><i class="ph ph-pencil-simple"></i></button>
+        <button onclick="delLookupEntry('${i.id}')" title="Delete"><i class="ph ph-trash"></i></button>
+      </span>
     </div>`).join("") : '<p class="muted" style="font-size:13px">No entries yet.</p>';
 }
+
 window.addLookupEntry = async function () {
   const name = $("#lookupInput").value.trim();
   if (!name) return;
-  const payload = { name };
-  if (lookupKind === "sections") payload.gradeLevel = "";
-  try { await D.addLookup(lookupKind, payload); $("#lookupInput").value = ""; await renderLookup(); toast("Added.", "success"); }
-  catch (err) { toast(err.message || "Failed.", "error"); }
-};
-window.delLookupEntry = async function (id) {
-  try { await D.deleteLookup(lookupKind, id); await renderLookup(); toast("Removed.", "success"); }
-  catch (err) { toast(err.message || "Failed.", "error"); }
+  try {
+    if (lookupKind === "positions") {
+      await D.addPosition({ name, scope: $("#lookupScope")?.value || "all", slots: Number($("#lookupSlots")?.value) || 1 });
+      await loadPositions();
+    } else if (lookupKind === "sections") {
+      await D.addLookup("sections", { name, gradeLevel: $("#lookupGrade")?.value || "" });
+    } else {
+      await D.addLookup(lookupKind, { name });
+    }
+    $("#lookupInput").value = "";
+    await renderLookup();
+    await refreshLookups();
+    toast("Added.", "success");
+  } catch (err) { toast(err.message || "Failed.", "error"); }
 };
 
+window.editLookupEntry = async function (id, oldName) {
+  const name = window.prompt("Rename entry:", oldName);
+  if (!name || name.trim() === oldName) return;
+  try {
+    await D.updateLookup(lookupKind, id, { name: name.trim() });
+    await renderLookup();
+    await refreshLookups();
+    if (lookupKind === "positions") await loadPositions();
+    toast("Renamed.", "success");
+  } catch (err) { toast(err.message || "Failed.", "error"); }
+};
+
+window.delLookupEntry = function (id) {
+  confirmAction("Delete entry?", "Remove this entry? Candidates or students referencing it are not changed.", async () => {
+    try {
+      await D.deleteLookup(lookupKind, id);
+      await renderLookup();
+      await refreshLookups();
+      if (lookupKind === "positions") await loadPositions();
+      toast("Removed.", "success");
+    } catch (err) { toast(err.message || "Failed.", "error"); }
+  });
+};
+
+// ---------------------------------------------------------------- archive
 window.archiveNow = function () {
-  confirmAction("Archive current election?", "This saves a snapshot of the current results and clears nothing — voters and votes remain. Use it to keep a historical record.", async () => {
+  confirmAction("Archive current election?", "This saves a snapshot of the current results. Voters and votes remain untouched.", async () => {
     try {
       const stats = await D.getOverviewStats();
       const votes = await D.listVotes();
@@ -433,21 +620,45 @@ window.archiveNow = function () {
   });
 };
 
+let archiveItems = [];
 async function renderArchive() {
   try {
-    const items = await D.listArchive();
-    $("#archiveList").innerHTML = items.length ? items.map((a) => `
+    archiveItems = await D.listArchive();
+    $("#archiveList").innerHTML = archiveItems.length ? archiveItems.map((a) => `
       <div class="card" style="margin-bottom:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
           <div>
             <div class="section-title" style="margin:0">${escapeHtml(a.electionName)} ${escapeHtml(a.academicYear)}</div>
             <span class="muted" style="font-size:12.5px">Archived by ${escapeHtml(a.archivedBy)} &middot; ${fmtDate(a.archivedAt)} &middot; ${a.stats ? a.stats.casted : 0} ballots of ${a.stats ? a.stats.registered : 0} voters</span>
           </div>
-          <button class="btn btn-danger btn-sm" onclick="removeArchive('${a.id}')"><i class="ph ph-trash"></i> Delete</button>
+          <div class="actions">
+            <button class="btn btn-ghost btn-sm" onclick="viewArchive('${a.id}')"><i class="ph ph-eye"></i> View</button>
+            <button class="btn btn-danger btn-sm" onclick="removeArchive('${a.id}')"><i class="ph ph-trash"></i> Delete</button>
+          </div>
         </div>
       </div>`).join("") : `<div class="empty card"><i class="ph ph-archive"></i>No archived elections yet.</div>`;
   } catch (err) { $("#archiveList").innerHTML = `<div class="empty card">${escapeHtml(err.message || "Could not load archive.")}</div>`; }
 }
+
+window.viewArchive = function (id) {
+  const a = archiveItems.find((x) => x.id === id);
+  if (!a) return;
+  $("#arcTitle").textContent = `${a.electionName} ${a.academicYear}`;
+  $("#arcSub").textContent = `Archived by ${a.archivedBy} · ${fmtDate(a.archivedAt)}`;
+  const results = a.results || [];
+  const winners = results.length ? D.computeWinners(results) : [];
+  $("#arcBody").innerHTML = `
+    <div class="grid cols-3" style="margin-bottom:14px">
+      <div class="stat"><div class="val">${a.stats ? a.stats.registered : 0}</div><div class="lbl2">Registered</div></div>
+      <div class="stat"><div class="val">${a.stats ? a.stats.casted : 0}</div><div class="lbl2">Ballots Cast</div></div>
+      <div class="stat"><div class="val">${a.stats ? a.stats.turnout : 0}%</div><div class="lbl2">Turnout</div></div>
+    </div>
+    <div class="section-title">Winners</div>
+    ${winners.length ? winners.map((w) => `<div class="lookup-item"><span>${escapeHtml(w.position)} — <b>${escapeHtml(w.name)}</b></span><span class="muted">${w.total}</span></div>`).join("") : '<p class="muted">No winners recorded.</p>'}
+  `;
+  openModal("archiveModal");
+};
+
 window.removeArchive = function (id) {
   confirmAction("Delete archive?", "This permanently removes the saved snapshot.", async () => {
     try { await D.deleteArchive(id); toast("Archive deleted.", "success"); renderArchive(); }
@@ -470,10 +681,11 @@ $("#confirmYes").addEventListener("click", async () => {
 
 // ---------------------------------------------------------------- search
 $("#candSearch").addEventListener("input", (e) => { candTerm = e.target.value.trim(); renderCandidates(); });
-$("#stuSearch").addEventListener("input", (e) => { stuTerm = e.target.value.trim(); renderStudents(); });
+$("#stuSearch").addEventListener("input", (e) => { stuTerm = e.target.value.trim(); stuPage = 1; renderStudents(); });
+$("#stuFilterGrade").addEventListener("change", (e) => { stuGradeFilter = e.target.value; stuPage = 1; renderStudents(); });
 $("#accSearch").addEventListener("input", (e) => { accTerm = e.target.value.trim(); renderAccounts(); });
+$("#logSearch").addEventListener("input", (e) => { logTerm = e.target.value.trim(); renderLoginLog(); });
 
-// Close sidebar on mobile after nav click handled in switchView.
 main().catch((err) => {
   console.error(err);
   $("#loading").innerHTML = `<div class="empty"><i class="ph ph-warning-circle"></i>${escapeHtml(err.message || "Failed to load dashboard.")}</div>`;

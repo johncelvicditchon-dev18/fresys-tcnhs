@@ -1,4 +1,5 @@
 import { loginStaff } from "./auth.js";
+import { logLogin } from "./data.js";
 import { $, showAlert, hideAlert, btnLoading } from "./ui.js";
 
 const alertEl = $("#alert");
@@ -13,8 +14,11 @@ form.addEventListener("submit", async (e) => {
   if (!username || !password) { showAlert(alertEl, "Please enter your username and password.", "error"); return; }
   btnLoading(submitBtn, true);
   try {
-    await loginStaff(username, password);
-    location.href = "dashboard.html";
+    const profile = await loginStaff(username, password);
+    logLogin({ username, name: profile?.name, role: profile?.role, action: "login" });
+    const target = sessionStorage.getItem("fresys_after_login") || "dashboard.html";
+    sessionStorage.removeItem("fresys_after_login");
+    location.href = target;
   } catch (err) {
     console.error(err);
     let msg = "Login failed. Please try again.";

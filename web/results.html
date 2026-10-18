@@ -29,6 +29,7 @@
             <button id="tabGrade" type="button">By Grade</button>
           </div>
           <button class="btn btn-ghost" onclick="window.print()"><i class="ph ph-printer"></i> Print</button>
+          <button class="btn btn-ghost" onclick="exportCsv()"><i class="ph ph-download-simple"></i> CSV</button>
           <a class="btn btn-ghost" href="dashboard.html" id="backLink"><i class="ph ph-arrow-left"></i> Dashboard</a>
         </div>
       </div>
@@ -41,6 +42,8 @@
       </div>
       <h2 class="section-title">Winners</h2>
       <div class="grid cols-3" id="winners" style="margin-bottom:28px"></div>
+      <h2 class="section-title" id="gradeWinnersTitle" style="display:none">Winners by Grade</h2>
+      <div class="grid cols-3" id="gradeWinners" style="margin-bottom:28px;display:none"></div>
       <h2 class="section-title">Full Tally by Position</h2>
       <div id="tally"></div>
     </div>
