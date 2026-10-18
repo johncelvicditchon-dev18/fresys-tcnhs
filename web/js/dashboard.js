@@ -46,7 +46,6 @@ async function main() {
   await refreshLookups();
 
   watchCandidates();
-  watchStudents();
   if (isAdmin) watchStaff();
   watchOverview();
   renderArchive();
