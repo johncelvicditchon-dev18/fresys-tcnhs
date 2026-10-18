@@ -157,6 +157,7 @@
 .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
 
 .row-photo { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1px solid var(--app-border); }
+.candidate-row-photo { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid var(--app-border); background: #F1F5F9; display: block; }
 .actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .muted { color: var(--app-soft); }
 

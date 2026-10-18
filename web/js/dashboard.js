@@ -6,6 +6,10 @@ import {
 } from "./ui.js";
 import { initOverviewCharts, refreshOverviewCharts } from "./overview.js";
 
+// Inline HTML handlers (onclick="closeModal(...)") need these on window.
+window.openModal = openModal;
+window.closeModal = closeModal;
+
 let profile = null;
 let candidates = [];
 let students = [];
@@ -649,15 +653,61 @@ window.addSectionInline = async function () {
   catch (err) { toast(err.message || "Failed.", "error"); }
 };
 
-window.editLookupEntry = async function (kind, id, oldName) {
-  const name = window.prompt("Rename entry:", oldName);
-  if (!name || name.trim() === oldName) return;
+window.editLookupEntry = function (kind, id, oldName) {
+  const src = { parties: partiesList, years: yearsList, sections: sectionsList, positions: positionsList }[kind] || [];
+  const item = src.find((x) => x.id === id) || { id, name: oldName };
+  openLookupModal(kind, item);
+};
+
+const LOOKUP_TITLES = {
+  parties: "Edit Party",
+  years: "Edit Academic Year",
+  sections: "Edit Section",
+  positions: "Edit Position"
+};
+
+function openLookupModal(kind, item) {
+  $("#lookupKind").value = kind;
+  $("#lookupId").value = item.id;
+  $("#lookupTitle").textContent = LOOKUP_TITLES[kind] || "Edit Entry";
+  $("#lookupNameLabel").textContent = kind === "years" ? "Academic Year" : "Name";
+  $("#lookupName").value = item.name || "";
+
+  const gradeWrap = $("#lookupGradeWrap");
+  const posWrap = $("#lookupPosWrap");
+  gradeWrap.style.display = kind === "sections" ? "block" : "none";
+  posWrap.style.display = kind === "positions" ? "block" : "none";
+
+  if (kind === "sections") $("#lookupGrade").value = item.gradeLevel || "";
+  if (kind === "positions") {
+    if (!$("#lookupScope").options.length)
+      $("#lookupScope").innerHTML = D.POSITION_SCOPES.map((s) => `<option value="${s.value}">${s.label}</option>`).join("");
+    $("#lookupScope").value = item.scope || "all";
+    $("#lookupSlots").value = item.slots || 1;
+  }
+  openModal("lookupModal");
+}
+
+window.saveLookup = async function () {
+  const kind = $("#lookupKind").value;
+  const id = $("#lookupId").value;
+  const name = $("#lookupName").value.trim();
+  if (!name) { toast("Name is required.", "error"); return; }
+
+  const payload = { name };
+  if (kind === "sections") payload.gradeLevel = $("#lookupGrade").value;
+  if (kind === "positions") { payload.scope = $("#lookupScope").value; payload.slots = Number($("#lookupSlots").value) || 1; }
+
+  const btn = $("#lookupSave");
+  btnLoading(btn, true);
   try {
-    await D.updateLookup(kind, id, { name: name.trim() });
+    await D.updateLookup(kind, id, payload);
     await refreshLookups();
     if (kind === "positions") { await loadPositions(); await renderManage(); }
-    toast("Renamed.", "success");
-  } catch (err) { toast(err.message || "Failed.", "error"); }
+    toast("Entry updated.", "success");
+    closeModal("lookupModal");
+  } catch (err) { toast(err.message || "Update failed.", "error"); }
+  finally { btnLoading(btn, false, "Save"); }
 };
 
 window.delLookupEntry = function (kind, id) {

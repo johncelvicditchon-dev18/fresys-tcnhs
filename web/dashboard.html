@@ -561,6 +561,36 @@
     </div>
   </div>
 
+  <!-- LOOKUP / RECORD EDIT MODAL -->
+  <div class="modal" id="lookupModal">
+    <div class="modal-box">
+      <h3 id="lookupTitle">Edit Entry</h3>
+      <p class="modal-sub">Update this record and save your changes.</p>
+      <input type="hidden" id="lookupKind" />
+      <input type="hidden" id="lookupId" />
+      <label class="lbl" id="lookupNameLabel">Name</label>
+      <input class="input-inline" id="lookupName" style="margin-bottom:12px" />
+      <div id="lookupGradeWrap" style="display:none">
+        <label class="lbl">Grade Level</label>
+        <select class="input-inline" id="lookupGrade" style="margin-bottom:12px">
+          <option value="">Select Grade Level</option>
+          <option>Grade 7</option><option>Grade 8</option><option>Grade 9</option>
+          <option>Grade 10</option><option>Grade 11</option><option>Grade 12</option>
+        </select>
+      </div>
+      <div id="lookupPosWrap" style="display:none">
+        <label class="lbl">Scope</label>
+        <select class="input-inline" id="lookupScope" style="margin-bottom:12px"></select>
+        <label class="lbl">Slots</label>
+        <input type="number" min="1" class="input-inline" id="lookupSlots" style="margin-bottom:12px" />
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('lookupModal')">Cancel</button>
+        <button class="btn btn-primary" style="width:auto" id="lookupSave" onclick="saveLookup()">Save</button>
+      </div>
+    </div>
+  </div>
+
   <!-- CONFIRM MODAL -->
   <div class="modal" id="confirmModal">
     <div class="modal-box" style="max-width:420px">
