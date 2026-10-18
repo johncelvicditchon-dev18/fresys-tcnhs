@@ -1,0 +1,229 @@
+.update-candidate-box {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    z-index: 501;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    background: var(--card);
+    padding: 32px;
+    border-radius: var(--radius-xl);
+    width: 100%;
+    max-width: 480px;
+    animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    display: none;
+}
+
+#div-for-images {
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    background: var(--card);
+    border-radius: var(--radius-xl);
+    padding: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    animation: popIn .3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.pop-images-candidate {
+    max-width: 300px;
+    max-height: 300px;
+    border-radius: var(--radius-lg);
+    object-fit: contain;
+}
+
+.close-popup {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 24px;
+    color: var(--text-muted);
+    z-index: 1;
+    transition: color 0.2s ease;
+}
+
+.close-popup:hover {
+    color: var(--text-dark);
+}
+
+.ph-x {
+    font-size: 20px;
+    color: var(--text-muted);
+}
+
+.candidate-picture-display {
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    display: flex;
+    margin-bottom: 16px;
+}
+
+.photodis {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    border: 3px solid var(--border);
+    object-fit: cover;
+}
+
+.selectphoto {
+    font-size: 13px;
+    margin-top: 10px;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.input-candidate-group,
+.select-candidate-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 14px;
+}
+
+.input-candidate-group label,
+.select-candidate-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-medium);
+    margin-bottom: 6px;
+}
+
+.input-candidate-group input,
+.select-candidate-group select {
+    padding: 11px 14px;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--text-dark);
+    font-size: 14px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.select-candidate-group {
+    width: 100%;
+    position: relative;
+}
+
+.update-candidate-box .select-candidate-group .-caret-update-candidate {
+    position: absolute;
+    color: var(--text-muted);
+    right: 14px;
+    top: 38px;
+    pointer-events: none;
+    transition: transform 0.3s ease;
+}
+
+.select-candidate-group:focus-within .-caret-update-candidate {
+    transform: rotate(180deg);
+    color: var(--primary);
+}
+
+.select-candidate-group select {
+    cursor: pointer;
+    -moz-appearance: none;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.button-update-candidates {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.button-update-candidates button {
+    flex: 1;
+    padding: 11px;
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.25s ease;
+}
+
+.update-candidate-box label {
+    font-size: 13px;
+    color: var(--text-medium);
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.ph-caret-down {
+    pointer-events: none;
+}
+
+.cancel-candidate {
+    background: var(--bg-alt);
+    color: var(--text-medium);
+    border: 1px solid var(--border) !important;
+}
+
+.cancel-candidate:hover {
+    background: var(--border);
+}
+
+.flexing {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.flexing .select-candidate-group {
+    flex: 1;
+}
+
+.candidate-picture-display input:focus,
+.input-candidate-group input:focus,
+.select-candidate-group select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+.savechangesbutton {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+.savechangesbutton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+}
+
+.warning {
+    background: #FEF3C7;
+    border: 1px solid #FDE68A;
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    margin: 14px 0;
+}
+
+.warning p {
+    color: #92400E;
+    font-size: 12px;
+    font-weight: 500;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.warning p i {
+    color: #D97706;
+}
+
+.update-circle {
+    font-size: 16px;
+}

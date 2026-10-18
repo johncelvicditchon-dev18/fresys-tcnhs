@@ -1,0 +1,359 @@
+:root {
+    --primary: #2D11E9;
+    --primary-light: #5B4CFF;
+    --hover: #0F5FD7;
+    --success: #10B981;
+    --red: #EF4444;
+    --hoverred: #DC2626;
+    --danger: #991B1B;
+    --border: rgba(255, 255, 255, 0.1);
+    --border-light: rgba(255, 255, 255, 0.06);
+    --bg: #0F172A;
+    --bg-alt: #1E293B;
+    --text-dark: #F1F5F9;
+    --text-light: #94A3B8;
+    --text-muted: #64748B;
+    --dark: #0F172A;
+    --card: #1E293B;
+    --muted: #94A3B8;
+    --input-bg: #0F172A;
+    --radius-sm: 8px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    align-items: center;
+    display: flex;
+    height: 100vh;
+    margin: 0;
+    justify-content: center;
+    background: linear-gradient(180deg, #0F172A 0%, #131C2E 100%);
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.015) 1px, transparent 0);
+    background-size: 32px 32px;
+}
+
+.candidates-regis-pop {
+    background: var(--card);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 420px;
+    border-radius: 18px;
+    flex-direction: column;
+    display: flex;
+    gap: 16px;
+    border: 1px solid var(--border);
+}
+
+.candidates-regis-pop label {
+    text-align: left;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+.candidate-photo-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.candidate-photo {
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    border: 3px solid var(--primary);
+    color: var(--bg);
+    transition: all 0.3s ease;
+    margin: 0 auto;
+    object-fit: cover;
+}
+
+.candidate-photo:hover {
+    transform: scale(1.03);
+    border-color: var(--primary-light);
+    box-shadow: 0 0 20px rgba(45, 17, 233, 0.3);
+}
+
+.selectphoto {
+    padding: 6px;
+    font-size: 11px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--muted);
+    margin: 0 auto;
+    display: block;
+    max-width: 180px;
+}
+
+.candidate-data,
+.select-position {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.candidate-data input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.select-party {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.select1,
+.select2 {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.select-position {
+    position: relative;
+}
+
+.ph-caret-down {
+    position: absolute;
+    right: 12px;
+    top: 34px;
+    color: var(--muted);
+    pointer-events: none;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.select1:focus-within .ph-caret-down,
+.select2:focus-within .ph-caret-down,
+.select-position:focus-within .ph-caret-down {
+    transform: rotate(180deg);
+    color: var(--primary-light);
+}
+
+.candidates-regis-pop input[type="text"],
+.candidates-regis-pop select {
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--border);
+    background: var(--input-bg);
+    color: var(--text-dark);
+    font-size: 13px;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+.candidates-regis-pop input[type="text"]::placeholder {
+    color: var(--text-muted);
+}
+
+#position,
+#party-candidate,
+#year-candidate {
+    -moz-appearance: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+}
+
+.candidates-regis-pop input:focus,
+.candidates-regis-pop select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(45, 17, 233, 0.15);
+}
+
+.button-registration-candidate {
+    align-items: center;
+    gap: 10px;
+    justify-content: space-between;
+    display: flex;
+    margin-top: 4px;
+}
+
+.button-registration-candidate button {
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    border: none;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+.back {
+    background: var(--bg-alt);
+    color: var(--text-light);
+    border: 1.5px solid var(--border) !important;
+    flex: 0.4;
+}
+
+.back:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-dark);
+}
+
+.submitCandidate {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    box-shadow: 0 2px 8px rgba(45, 17, 233, 0.3);
+    flex: 0.6;
+}
+
+.submitCandidate:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(45, 17, 233, 0.4);
+}
+
+.warning {
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+}
+
+.warning p {
+    color: #FCA5A5;
+    font-size: 11px;
+    font-weight: 500;
+    margin: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.4;
+}
+
+.warning p i {
+    color: var(--red);
+    font-size: 14px;
+    margin-top: 1px;
+    flex-shrink: 0;
+}
+
+/* ============================================
+   RESPONSIVE — TABLETS (max 768px)
+   ============================================ */
+@media (max-width: 768px) {
+    .candidates-regis-pop {
+        max-width: 380px;
+        padding: 24px 20px;
+    }
+
+    .candidate-photo {
+        width: 100px;
+        height: 100px;
+    }
+
+    .select-party {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* ============================================
+   RESPONSIVE — PHONES LANDSCAPE (max 599px)
+   ============================================ */
+@media (max-width: 599px) {
+    body {
+        padding: 10px;
+    }
+
+    .candidates-regis-pop {
+        max-width: 340px;
+        padding: 20px 16px;
+        border-radius: 14px;
+    }
+
+    .candidate-photo {
+        width: 90px;
+        height: 90px;
+    }
+
+    .candidates-regis-pop input[type="text"],
+    .candidates-regis-pop select {
+        padding: 9px 10px;
+        font-size: 12px;
+    }
+
+    .button-registration-candidate button {
+        padding: 9px 16px;
+        font-size: 12px;
+    }
+}
+
+/* ============================================
+   RESPONSIVE — PHONES PORTRAIT (max 479px)
+   ============================================ */
+@media (max-width: 479px) {
+    body {
+        padding: 8px;
+        align-items: flex-start;
+        padding-top: 20px;
+    }
+
+    .candidates-regis-pop {
+        max-width: none;
+        width: 100%;
+        padding: 18px 14px;
+        border-radius: 14px;
+        gap: 12px;
+    }
+
+    .candidates-regis-pop label {
+        font-size: 10px;
+    }
+
+    .candidate-photo {
+        width: 80px;
+        height: 80px;
+        border-width: 2px;
+    }
+
+    .selectphoto {
+        font-size: 10px;
+        padding: 4px;
+    }
+
+    .candidates-regis-pop input[type="text"],
+    .candidates-regis-pop select {
+        padding: 8px 10px;
+        font-size: 12px;
+        border-radius: 8px;
+    }
+
+    .ph-caret-down {
+        font-size: 12px;
+        right: 10px;
+        top: 30px;
+    }
+
+    .button-registration-candidate {
+        gap: 8px;
+    }
+
+    .button-registration-candidate button {
+        padding: 8px 12px;
+        font-size: 11px;
+        border-radius: 8px;
+    }
+
+    .warning {
+        padding: 8px 10px;
+    }
+
+    .warning p {
+        font-size: 10px;
+    }
+}

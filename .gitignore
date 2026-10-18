@@ -1,0 +1,23 @@
+# Database config credentials (will be set on InfinityFree)
+# database_connection.php has auto-detect, safe to commit
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE files
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.log
+fix_max_packet.php
+
+# Secrets - NEVER commit these
+includes/serviceAccountKey.json
+**/serviceAccountKey.json
+*.pem
+.env
+.env.*

@@ -1,0 +1,12 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+
+    "explorer.sortOrder": "type",
+    "explorer.autoReveal": true
+  }
+}

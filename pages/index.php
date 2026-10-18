@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+  <link rel="icon" href="../pictures/tcnhs_logo.png">
+  <title>fresys-tcnhs</title>
+  <style>
+    :root {
+      --primary: #ffffff;
+      --secondary: #2D11E9;
+      --secondary-light: #5B4CFF;
+      --hover: #0F5FD7;
+      --text-dark: #1e293b;
+      --text-light: #64748b;
+      --dark: #f1f5f9;
+      --red: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+      background: #0f172a;
+    }
+
+    /* ============================================
+       HERO SECTION
+       ============================================ */
+    .main-section {
+      position: relative;
+      min-height: 100vh;
+      isolation: isolate;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .main-section::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: url("../pictures/bg.jpg") center / cover no-repeat;
+      filter: blur(6px) brightness(0.4);
+      z-index: -2;
+      transform: scale(1.05);
+    }
+
+    .main-section::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.3) 0%, rgba(15, 23, 42, 0.7) 100%);
+      z-index: -1;
+    }
+
+    /* ============================================
+       HEADER / NAVBAR
+       ============================================ */
+    .header {
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 16px 40px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .login,
+    .signup {
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', system-ui, sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.25s ease;
+    }
+
+    .login {
+      background: var(--secondary);
+      border: none;
+      color: white;
+      box-shadow: 0 2px 8px rgba(45, 17, 233, 0.3);
+    }
+
+    .login:hover {
+      background: var(--secondary-light);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(45, 17, 233, 0.4);
+    }
+
+    .signup {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .signup:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* ============================================
+       HERO CONTENT
+       ============================================ */
+    .content-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
+      width: 100%;
+      flex-direction: column;
+      padding: 40px 20px;
+    }
+
+    .contentdiv {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+
+    .logo {
+      width: 80px;
+      height: auto;
+      transition: all 0.3s ease;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+    }
+
+    .logo:hover {
+      transform: scale(1.08) rotateY(10deg);
+    }
+
+    .heading {
+      font-family: 'Poppins', sans-serif;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      color: var(--primary);
+      font-size: 48px;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: -1px;
+      line-height: 1.1;
+      margin-bottom: 8px;
+    }
+
+    .headings {
+      color: rgba(255, 255, 255, 0.7);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 16px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 32px;
+    }
+
+    .vote-button {
+      margin-top: 8px;
+    }
+
+    .vote-button button {
+      padding: 14px 36px;
+      background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: 12px;
+      font-family: 'Inter', system-ui, sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 20px rgba(45, 17, 233, 0.4);
+      transition: all 0.25s ease;
+      letter-spacing: 0.5px;
+    }
+
+    .vote-button button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(45, 17, 233, 0.5);
+    }
+
+    /* ============================================
+       SECTIONS
+       ============================================ */
+    .about-advocacy,
+    .about-school {
+      min-height: 50vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 2rem;
+      position: relative;
+      overflow: hidden;
+      flex-direction: column;
+    }
+
+    .about-advocacy {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+    }
+
+    .about-school {
+      background: var(--primary);
+    }
+
+    .mission {
+      color: var(--text-dark);
+      font-family: 'Poppins', sans-serif;
+      font-size: 2rem;
+      text-align: center;
+      line-height: 1.3;
+      font-weight: 700;
+      margin-bottom: 24px;
+      letter-spacing: -0.5px;
+    }
+
+    .about-advocacy .mission {
+      color: white;
+    }
+
+    p {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      color: var(--text-light);
+      text-align: center;
+      max-width: 650px;
+      margin: 0 auto 20px auto;
+      line-height: 1.8;
+    }
+
+    .about-advocacy p {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .location img {
+      width: 100%;
+      max-width: 700px;
+      height: 320px;
+      cursor: pointer;
+      object-fit: cover;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      border: 1px solid var(--dark);
+    }
+
+    .location img:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 50px rgba(0, 0, 0, 0.2);
+    }
+
+    .fa-check-to-slot,
+    .fa-user-plus {
+      margin-right: 2px;
+    }
+
+    /* ============================================
+       DEVELOPER POPUP
+       ============================================ */
+    #developer {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 999;
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+      color: white;
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(45, 17, 233, 0.4);
+      animation: motion 3s infinite ease-in-out;
+      transition: all 0.3s ease;
+    }
+
+    #developer:hover {
+      transform: scale(1.1);
+    }
+
+    @keyframes motion {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .div-detail {
+      z-index: 9998;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      top: 0;
+      left: 0;
+      position: fixed;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: none;
+      overflow-x: hidden;
+    }
+
+    .detail {
+      padding: 0;
+      background: white;
+      z-index: 9999;
+      width: 400px;
+      max-width: 90%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+      position: fixed;
+      border-radius: 20px;
+      overflow: hidden;
+      animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    @keyframes popIn {
+      to { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .detail::-webkit-scrollbar {
+      display: none;
+    }
+
+    .about-dev {
+      padding: 14px 20px;
+      background: #0f172a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .aboutthedeveloper {
+      color: white;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ph-code {
+      color: var(--secondary-light);
+      font-size: 18px;
+    }
+
+    .close {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+    }
+
+    #closex {
+      font-size: 20px;
+      color: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    #closex:hover {
+      color: white;
+    }
+
+    .devimage {
+      padding: 32px 0 0;
+      text-align: center;
+    }
+
+    .img123 {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      margin: 0 auto;
+      border: 3px solid var(--dark);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .img123:hover {
+      transform: scale(1.05);
+    }
+
+    .devname {
+      color: var(--text-dark);
+      font-size: 18px;
+      font-family: 'Poppins', sans-serif;
+      text-align: center;
+      font-weight: 700;
+      margin: 16px 0 4px;
+      padding: 0 20px;
+    }
+
+    .subdevname {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-light);
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 16px;
+      padding: 0 20px;
+    }
+
+    .description {
+      width: 100%;
+      max-width: 100%;
+      font-size: 13px;
+      word-wrap: break-word;
+      line-height: 1.7;
+      color: var(--text-light);
+      padding: 0 24px;
+    }
+
+    .githhh {
+      align-items: center;
+      justify-content: center;
+      display: flex;
+      padding: 20px 24px 28px;
+    }
+
+    .githubconnect {
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      background: #0f172a;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .githubconnect:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3);
+    }
+
+    /* ============================================
+       RESPONSIVE
+       ============================================ */
+    @media (max-width: 768px) {
+      .heading {
+        font-size: 32px;
+      }
+
+      .headings {
+        font-size: 12px;
+        letter-spacing: 2px;
+      }
+
+      .logo {
+        width: 60px;
+      }
+
+      .header {
+        padding: 12px 20px;
+      }
+
+      .login,
+      .signup {
+        padding: 8px 14px;
+        font-size: 12px;
+      }
+
+      .mission {
+        font-size: 1.5rem;
+      }
+
+      .vote-button button {
+        padding: 12px 28px;
+        font-size: 14px;
+      }
+
+      .detail {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="div-detail" id="popUpGwapo">
+    <div class="detail" id="popUpGwapo1">
+      <div class="about-dev">
+        <h4 class="aboutthedeveloper"><i class="ph ph-code"></i>About the Developer</h4>
+        <button class="close"><span><i class="ph ph-x" id="closex"></i></span></button>
+      </div>
+      <div class="devimage">
+        <img class="img123" src="../pictures/devpic.png" alt="">
+      </div>
+      <h4 class="devname">JOHNCEL VIC C. DITCHON</h4>
+      <p class="subdevname">Junior Developer</p>
+      <div class="div-habb">
+        <p class="description">Passionate about building efficient, user-friendly, and purpose-driven web applications. I
+          am currently a 1st Year Bachelor of Science in Computer Science student at Tangub City Global College,
+          continuously learning and improving my
+          skills in web development. You can explore my projects and reach me through my GitHub profile.</p>
+      </div>
+      <div class="githhh">
+        <a class="githubconnect" target="_blank" href="https://github.com/johncelvicditchon-dev18"><i
+            class="ph ph-github-logo"></i>GitHub</a>
+      </div>
+    </div>
+  </div>
+
+  <i class="ph ph-smiley" id="developer"></i>
+
+  <section class="main-section">
+    <header class="header">
+      <div class="buttons">
+        <button onclick="displayLogin()" class="login"><i class="fa-solid fa-right-to-bracket"></i> Log in</button>
+        <button onclick="displaySignUp()" class="signup"><i class="fa-solid fa-user-plus"></i> Sign Up</button>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <div class="contentdiv">
+        <img class="logo" src="../pictures/tcnhs_logo.png" alt="school logo">
+        <img class="logo" src="../pictures/sslg.png" alt="school logo">
+      </div>
+      <h1 class="heading">TANGUB CITY NATIONAL HIGH SCHOOL</h1>
+      <h2 class="headings">Fast-Result Electoral System</h2>
+      <div class="vote-button">
+        <button onclick="displayVerification()"><i class="fa-solid fa-check-to-slot"></i> Vote Here</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="about-advocacy">
+    <h2 class="mission">About Our Mission</h2>
+    <p>The Supreme Student Learner Government (SSLG) aims to develop responsible, proactive, and competent student leaders by promoting active student participation, discipline, integrity, and democratic values. It strives to serve the school community, represent the voice of the learners, and organize programs and activities that enhance the welfare, leadership skills, and academic growth of all students.</p>
+  </section>
+
+  <section class="about-school">
+    <h2 class="mission">About Our School</h2>
+    <p>Tangub City National High School is committed to providing quality education and nurturing students to become responsible citizens and future leaders of the nation.</p>
+    <div class="location">
+      <img src="../pictures/location.png" alt="School Location">
+    </div>
+  </section>
+
+  <script src="../javascript/index.js"></script>
+</body>
+
+</html>
