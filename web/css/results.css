@@ -1,0 +1,29 @@
+/* Results page styles */
+.results-top { position: sticky; top: 0; z-index: 20; background: rgba(9,14,28,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--panel-border); }
+.results-top .inner { max-width: 1100px; margin: 0 auto; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.results-top h1 { font-size: 18px; color: #fff; }
+.results-top .sub { font-size: 12px; color: var(--text-soft); }
+.results-body { max-width: 1100px; margin: 0 auto; padding: 24px 20px 80px; }
+.rank-row { display: grid; grid-template-columns: 46px 1fr auto; gap: 14px; align-items: center; padding: 12px 0; border-top: 1px solid var(--panel-border); }
+.rank-row:first-child { border-top: none; }
+.rank-row .rk { font-weight: 700; color: var(--text-soft); text-align: center; }
+.rank-row .rk.top { color: #fbbf24; }
+.rank-photo { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 1px solid var(--panel-border); }
+.rank-main { min-width: 0; }
+.rank-main .nm { color: #fff; font-weight: 600; font-size: 14px; }
+.rank-main .pt { color: var(--text-soft); font-size: 12px; }
+.rank-main .bar { margin-top: 7px; }
+.rank-row .vote { text-align: right; }
+.rank-row .vote b { color: #fff; font-size: 18px; }
+.rank-row .vote span { display: block; font-size: 11px; color: var(--text-soft); }
+.winner-card { display: flex; align-items: center; gap: 12px; }
+.winner-card img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid #fbbf24; }
+.winner-card b { color: #fff; display: block; font-size: 14px; }
+.winner-card span { color: var(--text-soft); font-size: 12px; }
+.grade-chip { display:inline-flex; gap:6px; align-items:center; font-size:11px; color:var(--text-soft); }
+@media print {
+  .results-top, .no-print { display: none !important; }
+  body { background: #fff; color: #000; }
+  .card, .stat { border: 1px solid #ccc; background: #fff; }
+  .rank-main .nm, .results-top h1, .section-title { color: #000; }
+}

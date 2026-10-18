@@ -1,0 +1,19 @@
+/* Dashboard-specific tweaks (builds on style.css) */
+body:not(.is-admin) .admin-only { display: none !important; }
+
+.grade-row { display: flex; align-items: center; gap: 14px; padding: 10px 0; border-top: 1px solid var(--panel-border); }
+.grade-row:first-child { border-top: none; }
+.grade-row .gl { width: 70px; color: #fff; font-weight: 600; font-size: 13px; }
+.grade-row .gbar { flex: 1; }
+.grade-row .gv { width: 96px; text-align: right; font-size: 12px; color: var(--text-soft); }
+.grade-row .gv b { color: #fff; }
+
+.status-line { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--panel-border); font-size: 14px; }
+.status-line:first-child { border-top: none; }
+.status-line span { color: var(--text-soft); }
+.status-line b { color: #fff; }
+
+.lookup-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 12px; border-radius: 8px; background: rgba(255,255,255,0.04); margin-bottom: 8px; font-size: 13.5px; }
+.lookup-item button { background: none; border: none; color: #f87171; cursor: pointer; font-size: 16px; }
+
+input[type="file"].input-inline { padding: 8px 10px; }

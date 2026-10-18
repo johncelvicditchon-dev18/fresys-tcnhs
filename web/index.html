@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FRESYS | Tangub City NHS Election</title>
+  <link rel="icon" href="assets/pictures/tcnhs_logo.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .hero { max-width: 760px; text-align: center; }
+    .hero .logos { display: flex; gap: 20px; justify-content: center; margin-bottom: 22px; }
+    .hero .logos img { width: 84px; height: 84px; border-radius: 18px; object-fit: cover; box-shadow: var(--shadow-md); }
+    .hero h1 { font-size: clamp(28px, 5vw, 42px); font-weight: 800; color: #fff; letter-spacing: -0.5px; line-height: 1.15; }
+    .hero .eyebrow { display: inline-block; padding: 6px 14px; border-radius: 20px; background: var(--panel); border: 1px solid var(--panel-border); color: var(--text-soft); font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 18px; }
+    .hero p.lead { color: var(--text-soft); margin: 16px auto 34px; max-width: 520px; font-size: 15px; }
+    .hero .cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .cta .btn { min-width: 210px; }
+    .feat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 54px; text-align: left; }
+    .feat .card i { font-size: 24px; color: var(--secondary); margin-bottom: 10px; display: block; }
+    .feat .card b { color: #fff; display: block; margin-bottom: 4px; }
+    .feat .card span { color: var(--text-soft); font-size: 13px; }
+    @media (max-width: 720px) { .feat { grid-template-columns: 1fr; } .cta .btn { width: 100%; } }
+  </style>
+</head>
+<body>
+  <div class="bggg-backdrop"></div>
+  <main class="center-screen">
+    <section class="hero">
+      <div class="logos">
+        <img src="assets/pictures/tcnhs_logo.png" alt="TCNHS" />
+        <img src="assets/pictures/sslg_logo.jpg" alt="SSLG" />
+      </div>
+      <span class="eyebrow">Supreme Student Learner Government</span>
+      <h1>Tangub City National High School<br />Online Election System</h1>
+      <p class="lead">Cast your vote securely for your student leaders. One verified student, one vote — results are tallied automatically and transparently.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="verify.html"><i class="ph ph-shield-check"></i> Student Voting</a>
+        <a class="btn btn-ghost" href="login.html"><i class="ph ph-user-circle-gear"></i> Staff / Admin Login</a>
+      </div>
+      <div class="feat">
+        <div class="card"><i class="ph ph-identification-card"></i><b>Verified Voting</b><span>Every ballot requires a valid student verification code.</span></div>
+        <div class="card"><i class="ph ph-lock-key"></i><b>One Vote, One Student</b><span>Each student can cast a single, unchangeable ballot.</span></div>
+        <div class="card"><i class="ph ph-chart-bar"></i><b>Live Results</b><span>Votes are counted instantly with grade-level breakdowns.</span></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

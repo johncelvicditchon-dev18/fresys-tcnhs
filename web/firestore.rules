@@ -1,0 +1,88 @@
+rules_version = '2';
+
+// ---------------------------------------------------------------------------
+// FRESYS-TCNHS Firestore Security Rules
+// ---------------------------------------------------------------------------
+// Staff = approved Admin/Adviser (profile in staff/{uid}).
+// Voters = anonymous-auth users who verified a code (see verify.html).
+// Integrity: one immutable vote document per student, created only while the
+// student's voteStatus is "Available".
+// ---------------------------------------------------------------------------
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function staffDoc() {
+      return get(/databases/$(database)/documents/staff/$(request.auth.uid)).data;
+    }
+    function isStaff() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/staff/$(request.auth.uid))
+        && staffDoc().status == 'Approved';
+    }
+    function isAdmin() { return isStaff() && staffDoc().role == 'Admin'; }
+    function resultsPublic() {
+      return exists(/databases/$(database)/documents/settings/main)
+        && get(/databases/$(database)/documents/settings/main).data.resultsPublic == true;
+    }
+
+    // Public settings + lookup data -----------------------------------------
+    match /settings/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /candidates/{id} {
+      allow read: if signedIn();
+      allow write: if isStaff();
+    }
+    match /positions/{id} { allow read: if signedIn(); allow write: if isAdmin(); }
+    match /parties/{id}   { allow read: if signedIn(); allow write: if isAdmin(); }
+    match /years/{id}     { allow read: if signedIn(); allow write: if isAdmin(); }
+    match /sections/{id}  { allow read: if signedIn(); allow write: if isAdmin(); }
+
+    // Verification codes: never listable; fetch by exact id only -------------
+    match /codes/{code} {
+      allow get: if signedIn();
+      allow list: if isStaff();
+      allow write: if isStaff();
+    }
+
+    // Students ---------------------------------------------------------------
+    // Staff manage everything. A voter may only flip voteStatus to "Casted"
+    // once, as part of casting a ballot.
+    match /students/{id} {
+      allow read: if isStaff();
+      allow create, delete: if isStaff();
+      allow update: if isStaff()
+        || (signedIn()
+            && resource.data.voteStatus == 'Available'
+            && request.resource.data.voteStatus == 'Casted'
+            && request.resource.data.diff(resource.data)
+                 .affectedKeys().hasOnly(['voteStatus', 'dateCasted']));
+    }
+
+    // Votes: immutable, one per student, created only while available -------
+    match /votes/{studentId} {
+      allow read: if isStaff() || resultsPublic();
+      allow create: if signedIn()
+        && request.resource.data.studentId == studentId
+        && get(/databases/$(database)/documents/students/$(studentId)).data.voteStatus == 'Available';
+      allow update, delete: if false;
+    }
+
+    // Staff accounts ---------------------------------------------------------
+    match /staff/{uid} {
+      allow read: if (signedIn() && request.auth.uid == uid) || isAdmin();
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.status == 'Pending';
+      allow update, delete: if isAdmin();
+    }
+
+    // Election archive -------------------------------------------------------
+    match /archive/{id} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+  }
+}

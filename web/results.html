@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Election Results | FRESYS-TCNHS</title>
+  <link rel="icon" href="assets/pictures/tcnhs_logo.png" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/results.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="loading" class="center-screen">
+    <div class="spinner" style="width:34px;height:34px;border-width:3px"></div>
+    <p class="muted">Loading results...</p>
+  </div>
+
+  <div id="app" style="display:none">
+    <header class="results-top">
+      <div class="inner">
+        <div>
+          <h1 id="title">Election Results</h1>
+          <div class="sub" id="subtitle">Live tally</div>
+        </div>
+        <div class="no-print" style="display:flex;gap:10px;align-items:center">
+          <div class="switch-tabs" style="margin:0">
+            <button id="tabOverall" class="active" type="button">Overall</button>
+            <button id="tabGrade" type="button">By Grade</button>
+          </div>
+          <button class="btn btn-ghost" onclick="window.print()"><i class="ph ph-printer"></i> Print</button>
+          <a class="btn btn-ghost" href="dashboard.html" id="backLink"><i class="ph ph-arrow-left"></i> Dashboard</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="results-body">
+      <div class="grid cols-3" id="stats" style="margin-bottom:22px"></div>
+      <div style="margin-bottom:14px" class="no-print">
+        <input class="input-inline" id="search" placeholder="Search candidate or position..." />
+      </div>
+      <h2 class="section-title">Winners</h2>
+      <div class="grid cols-3" id="winners" style="margin-bottom:28px"></div>
+      <h2 class="section-title">Full Tally by Position</h2>
+      <div id="tally"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/results.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Verification | FRESYS-TCNHS</title>
+  <link rel="icon" href="assets/pictures/tcnhs_logo.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="bggg-backdrop"></div>
+  <main class="auth-wrap">
+    <section class="auth-box">
+      <button class="top-back" onclick="location.href='index.html'"><i class="ph ph-x"></i></button>
+      <div class="box-logo"><img src="assets/pictures/tcnhs_logo.png" alt="Logo" /></div>
+      <h1>Voter Verification</h1>
+      <p class="sub">Enter your verification code to receive your ballot</p>
+
+      <div class="switch-tabs">
+        <button type="button" id="maniBtn" class="active"><i class="ph ph-keypad"></i> Code</button>
+        <button type="button" id="qrBtn"><i class="ph ph-qr-code"></i> QR Code</button>
+      </div>
+
+      <div class="alert" id="alert"></div>
+
+      <form id="codeForm">
+        <label class="lbl">Verification Code</label>
+        <div class="field">
+          <i class="ph ph-fingerprint ph"></i>
+          <input type="text" id="code" placeholder=" " autocomplete="off" maxlength="24" required />
+          <label class="fl" for="code">Verification Code</label>
+        </div>
+        <label class="lbl">Grade Level</label>
+        <div class="field">
+          <i class="ph ph-student ph"></i>
+          <select id="gradeLevel" required>
+            <option value="" disabled selected>Select Grade Level</option>
+            <option>Grade 7</option><option>Grade 8</option><option>Grade 9</option>
+            <option>Grade 10</option><option>Grade 11</option><option>Grade 12</option>
+          </select>
+          <i class="ph ph-caret-down ph-caret"></i>
+        </div>
+        <button type="submit" class="btn btn-primary" id="submitBtn"><i class="ph ph-sign-in"></i> Continue to Ballot</button>
+      </form>
+
+      <div id="qrPane" style="display:none">
+        <div id="reader" style="border-radius:14px;overflow:hidden;background:rgba(255,255,255,0.04)"></div>
+        <p class="muted" style="margin-top:12px;font-size:13px">Point your QR code at the camera</p>
+      </div>
+
+      <div class="auth-foot">No code yet? Please contact your class adviser.</div>
+    </section>
+  </main>
+
+  <script type="module" src="js/verify.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+</body>
+</html>

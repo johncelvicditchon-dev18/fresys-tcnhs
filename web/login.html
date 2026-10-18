@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Staff Login | FRESYS-TCNHS</title>
+  <link rel="icon" href="assets/pictures/tcnhs_logo.png" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="bggg-backdrop"></div>
+  <main class="auth-wrap">
+    <section class="auth-box">
+      <button class="top-back" onclick="location.href='index.html'"><i class="ph ph-x"></i></button>
+      <div class="box-logo"><img src="assets/pictures/tcnhs_logo.png" alt="Logo" /></div>
+      <h1>Welcome Back</h1>
+      <p class="sub">Log in to the election control panel</p>
+
+      <div class="alert" id="alert"></div>
+
+      <form id="loginForm">
+        <div class="field">
+          <i class="ph ph-user ph"></i>
+          <input type="text" id="username" placeholder=" " autocomplete="username" required />
+          <label class="fl" for="username">Username</label>
+        </div>
+        <div class="field">
+          <i class="fa-solid fa-unlock ph"></i>
+          <input type="password" id="password" placeholder=" " autocomplete="current-password" required />
+          <label class="fl" for="password">Password</label>
+        </div>
+        <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
+      </form>
+
+      <div class="auth-foot">Don't have an account? <a href="signup.html">Sign Up</a></div>
+    </section>
+  </main>
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>

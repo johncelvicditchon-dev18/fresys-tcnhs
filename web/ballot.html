@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Official Ballot | FRESYS-TCNHS</title>
+  <link rel="icon" href="assets/pictures/tcnhs_logo.png" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/ballot.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="loading" class="center-screen">
+    <div class="spinner" style="width:34px;height:34px;border-width:3px"></div>
+    <p class="muted">Preparing your ballot...</p>
+  </div>
+
+  <div id="app" style="display:none">
+    <header class="ballot-top">
+      <div class="inner">
+        <div class="school">
+          <img src="assets/pictures/tcnhs_logo.png" alt="logo" />
+          <div>
+            <h2 id="schoolName">TANGUB CITY NATIONAL HIGH SCHOOL</h2>
+            <span id="electionName">SUPREME STUDENT LEARNER GOVERNMENT ELECTION</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="stu-chip">
+            <div class="av"><i class="ph ph-user"></i></div>
+            <div>
+              <b id="stuName">Student</b>
+              <span id="stuMeta">Grade</span>
+            </div>
+          </div>
+          <button class="logout-mini" title="Log out" onclick="ballotLogout()"><i class="ph ph-sign-out"></i></button>
+        </div>
+      </div>
+    </header>
+
+    <div class="ballot-body">
+      <div class="ballot-intro">
+        <h1>Official Ballot</h1>
+        <p id="ballotHint">Select your candidates. Choices cannot be changed after submission.</p>
+      </div>
+      <div id="positions"></div>
+    </div>
+
+    <div class="ballot-bar">
+      <div class="inner">
+        <div class="summary" id="summary">0 of 0 positions completed</div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost" onclick="ballotLogout()">Cancel</button>
+          <button class="btn btn-primary" style="width:auto" id="reviewBtn" onclick="openReview()"><i class="ph ph-list-checks"></i> Review &amp; Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Review modal -->
+  <div class="modal review-modal" id="reviewModal">
+    <div class="modal-box">
+      <h3>Review Your Votes</h3>
+      <p class="modal-sub">Please confirm your selections before submitting. This action is final.</p>
+      <div class="review-list" id="reviewList"></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal('reviewModal')">Go Back</button>
+        <button class="btn btn-primary" style="width:auto" id="confirmBtn" onclick="confirmSubmit()"><i class="ph ph-check-circle"></i> Confirm &amp; Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/ballot.js"></script>
+</body>
+</html>
