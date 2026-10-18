@@ -31,11 +31,17 @@ import {
   deleteField,
   increment
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Analytics is optional and only runs in browser environments that support it.
+if (typeof window !== "undefined" && firebaseConfig.measurementId) {
+  isSupported().then((ok) => { if (ok) getAnalytics(app); }).catch(() => {});
+}
 
 export {
   signInAnonymously,
