@@ -1,0 +1,20 @@
+# Keep the legacy PHP app and PHP sources out of the Vercel deployment.
+# Only the static `web/` app should be served.
+/api/
+/auth/
+/css_folder/
+/handlers/
+/includes/
+/javascript/
+/pages/
+/pictures/
+/print/
+/tcpdf/
+*.php
+composer-setup.php
+workspace.code-workspace
+README.md
+web/README.md
+web/firebase.json
+web/firestore.rules
+web/firestore.indexes.json
