@@ -10,32 +10,43 @@ let candidates = [];
 let students = [];
 let staffList = [];
 let positionsList = [];
+let partiesList = [];
+let yearsList = [];
+let sectionsList = [];
 let loginLog = [];
 let settings = null;
-let candTerm = "", stuTerm = "", accTerm = "", logTerm = "", stuGradeFilter = "";
+let candTerm = "", stuTerm = "", accTerm = "", logTerm = "";
 let editPhoto = null;
 let stuPage = 1;
 const STU_PAGE = 100;
 
-const VIEW_META = {
-  overview: ["Overview", "Election at a glance"],
-  candidates: ["Candidates", "Manage registered candidates"],
-  students: ["Students", "Registered voters and verification codes"],
-  accounts: ["Accounts", "Approve and manage staff access"],
-  loginlog: ["Login Log", "Recent staff sign-ins"],
-  settings: ["Settings", "Election configuration"],
-  archive: ["Archive", "Past election results"]
-};
-
 window.doLogout = () => signOut(auth).finally(() => location.replace("login.html"));
+
+const SECTIONS = [
+  "overview-card", "student-card", "student-card-vote-status", "account-card",
+  "loginlog-card", "candidate-card", "bulk-import-card", "manage-e-one",
+  "manage-e-two", "manage-e-three", "election-history-card"
+];
+
+function hideAll() {
+  SECTIONS.forEach((id) => { const el = document.getElementById(id); if (el) el.style.display = "none"; });
+}
+function showSection(id, display = "block") {
+  hideAll();
+  const el = document.getElementById(id);
+  if (el) el.style.display = display;
+}
+window.showAccounts = () => showSection("account-card");
+window.showLoginLog = () => { showSection("loginlog-card"); renderLoginLog(); };
 
 // ---------------------------------------------------------------- bootstrap
 async function main() {
   profile = await requireStaff();
   const isAdmin = profile.role === "Admin";
   document.body.classList.toggle("is-admin", isAdmin);
-  $("#userName").textContent = profile.name || profile.username;
-  $("#userRole").textContent = profile.role;
+  if ($("#userName")) $("#userName").textContent = profile.name || profile.username;
+  if ($("#ddName")) $("#ddName").textContent = profile.name || profile.username;
+  if ($("#userRole")) $("#userRole").textContent = profile.role;
 
   if (isAdmin) { try { await D.ensureSeed(); } catch (_) {} }
   await loadPositions();
@@ -59,21 +70,47 @@ async function loadPositions() {
   if (!positionsList.length) positionsList = D.DEFAULT_POSITIONS.map((p, i) => ({ id: `default-${i}`, ...p }));
 }
 
+// ---------------------------------------------------------------- navigation
 function setupNav() {
-  $$(".nav-item[data-view]").forEach((btn) => {
-    btn.addEventListener("click", () => switchView(btn.dataset.view));
+  const map = {
+    overview: () => { showSection("overview-card"); setTitle("Overview"); },
+    registered: () => { showSection("student-card"); setTitle("Registered Students"); },
+    bulkimport: () => { showSection("bulk-import-card"); setTitle("Import Students"); },
+    printstudent: () => window.open("print.html?type=students", "_blank"),
+    votestudentcasted: () => { showSection("student-card-vote-status"); renderCasted(); setTitle("Vote Casted"); },
+    account: () => { showSection("account-card"); setTitle("Accounts"); },
+    "candidate-sidebar": () => { showSection("candidate-card"); setTitle("Candidates"); },
+    gotoresult: () => { window.location.href = "results.html"; },
+    manage_election: () => { hideAll(); ["manage-e-one", "manage-e-two", "manage-e-three"].forEach((id) => { const el = document.getElementById(id); if (el) el.style.display = "grid"; }); renderManage(); setTitle("Manage Election"); },
+    "election-history": () => { showSection("election-history-card"); renderArchive(); setTitle("Election History"); }
+  };
+  Object.entries(map).forEach(([id, fn]) => { const el = document.getElementById(id); if (el) el.addEventListener("click", fn); });
+
+  // Students dropdown toggle
+  const studentLi = document.getElementById("student");
+  if (studentLi) studentLi.addEventListener("click", () => studentLi.classList.toggle("active"));
+  $$(".dropdown li").forEach((item) => item.addEventListener("click", (e) => e.stopPropagation()));
+
+  // Hamburger
+  const hamburger = document.querySelector(".hamburger");
+  const sidebar = document.querySelector(".sidebar");
+  const layout = document.querySelector(".layout");
+  if (hamburger) hamburger.addEventListener("click", () => {
+    if (window.innerWidth > 768) { sidebar.classList.toggle("collapsed"); layout.classList.toggle("sidebar-collapsed"); }
+    else sidebar.classList.toggle("active");
   });
+
+  // Profile dropdown
+  const profileEl = document.getElementById("header-profile");
+  if (profileEl) {
+    profileEl.addEventListener("click", (e) => { e.stopPropagation(); profileEl.classList.toggle("open"); });
+    document.addEventListener("click", (e) => { if (!profileEl.contains(e.target)) profileEl.classList.remove("open"); });
+  }
+
+  showSection("overview-card");
 }
-function switchView(view) {
-  $$(".nav-item[data-view]").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
-  $$(".view").forEach((v) => v.classList.toggle("active", v.id === `view-${view}`));
-  const [t, s] = VIEW_META[view] || ["Dashboard", ""];
-  $("#viewTitle").textContent = t;
-  $("#viewSub").textContent = s;
-  $("#sidebar").classList.remove("open");
-  if (view === "archive") renderArchive();
-  if (view === "loginlog") renderLoginLog();
-}
+
+function setTitle(t) { const el = $("#pageTitle"); if (el) el.textContent = t; }
 
 // ---------------------------------------------------------------- overview
 function watchOverview() {
@@ -81,6 +118,7 @@ function watchOverview() {
     students = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     renderOverview();
     renderStudents();
+    renderCasted();
   });
 }
 
@@ -88,7 +126,7 @@ function renderOverview() {
   const registered = students.length;
   const casted = students.filter((s) => s.voteStatus === "Casted").length;
   const turnout = registered ? Math.round((casted / registered) * 1000) / 10 : 0;
-  $("#statsGrid").innerHTML = `
+  if ($("#statsGrid")) $("#statsGrid").innerHTML = `
     <div class="stat"><div class="ico"><i class="ph ph-users"></i></div><div class="val">${registered}</div><div class="lbl2">Registered Voters</div></div>
     <div class="stat"><div class="ico"><i class="ph ph-check-square"></i></div><div class="val">${casted}</div><div class="lbl2">Ballots Cast</div></div>
     <div class="stat"><div class="ico"><i class="ph ph-user-minus"></i></div><div class="val">${registered - casted}</div><div class="lbl2">Not Yet Voted</div></div>
@@ -101,7 +139,7 @@ function renderOverview() {
     byGrade[s.gradeLevel].reg++;
     if (s.voteStatus === "Casted") byGrade[s.gradeLevel].cast++;
   }
-  $("#gradeTurnout").innerHTML = D.GRADES.map((g) => {
+  if ($("#gradeTurnout")) $("#gradeTurnout").innerHTML = D.GRADES.map((g) => {
     const d = byGrade[g] || { reg: 0, cast: 0 };
     const pct = d.reg ? Math.round((d.cast / d.reg) * 100) : 0;
     return `<div class="grade-row">
@@ -111,7 +149,7 @@ function renderOverview() {
     </div>`;
   }).join("");
 
-  $("#statusPanel").innerHTML = `
+  if ($("#statusPanel")) $("#statusPanel").innerHTML = `
     <div class="status-line"><span>Election</span><b>${escapeHtml(settings.electionName)}</b></div>
     <div class="status-line"><span>Academic Year</span><b>${escapeHtml(settings.academicYear)}</b></div>
     <div class="status-line"><span>Voting Status</span><b>${settings.votingOpen ? '<span class="badge badge-green">OPEN</span>' : '<span class="badge badge-red">CLOSED</span>'}</b></div>
@@ -130,21 +168,21 @@ function watchCandidates() {
 }
 
 function renderCandidates() {
+  const body = $("#table-body-candidate");
+  if (!body) return;
   const term = candTerm.toLowerCase();
   const rows = candidates.filter((c) =>
     !term || (c.name || "").toLowerCase().includes(term) || (c.position || "").toLowerCase().includes(term) || (c.party || "").toLowerCase().includes(term));
-  $("#candBody").innerHTML = rows.length ? rows.map((c) => `
+  body.innerHTML = rows.length ? rows.map((c) => `
     <tr>
-      <td><img class="row-photo" src="${c.photo || "assets/pictures/user_candidate.jpg"}" onerror="this.src='assets/pictures/user_candidate.jpg'" alt=""></td>
+      <td><i class="fa-regular fa-pen-to-square editcandidate" style="cursor:pointer" data-id="${c.id}" onclick="openCandidate(this.dataset.id)"></i></td>
+      <td><img class="candidate-row-photo" src="${c.photo || "assets/pictures/user_candidate.jpg"}" onerror="this.src='assets/pictures/user_candidate.jpg'" alt=""></td>
       <td>${escapeHtml(c.name)}</td>
-      <td><span class="badge badge-blue">${escapeHtml(c.position)}</span></td>
+      <td>${escapeHtml(c.position)}</td>
       <td>${escapeHtml(c.party || "-")}</td>
       <td>${escapeHtml(c.year || "-")}</td>
-      <td><div class="actions">
-        <button class="btn btn-ghost btn-sm" onclick="openCandidate('${c.id}')"><i class="ph ph-pencil-simple"></i></button>
-        <button class="btn btn-danger btn-sm" onclick="removeCandidate('${c.id}','${escapeHtml(c.name).replace(/'/g, "\\'")}')"><i class="ph ph-trash"></i></button>
-      </div></td>
-    </tr>`).join("") : `<tr><td colspan="6"><div class="empty"><i class="ph ph-user-list"></i>No candidates yet.</div></td></tr>`;
+      <td><i class="fa-solid fa-trash-can btn-delete-candidate" style="cursor:pointer" data-id="${c.id}" data-name="${escapeHtml(c.name)}" onclick="removeCandidate(this.dataset.id, this.dataset.name)"></i></td>
+    </tr>`).join("") : `<tr><td colspan="7" class="no-data">No data found!</td></tr>`;
 }
 
 window.openCandidate = async function (id) {
@@ -175,7 +213,7 @@ window.openCandidate = async function (id) {
   openModal("candidateModal");
 };
 
-$("#candPhoto").addEventListener("change", async (e) => {
+$("#candPhoto")?.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
   try { editPhoto = await fileToDataUrl(file, 400); $("#candPreview").src = editPhoto; }
@@ -215,42 +253,69 @@ window.removeCandidate = function (id, name) {
 function filteredStudents() {
   const term = stuTerm.toLowerCase();
   return students.filter((s) => {
-    if (stuGradeFilter && s.gradeLevel !== stuGradeFilter) return false;
     const name = D.fullName(s).toLowerCase();
     return !term || name.includes(term) || (s.code || "").toLowerCase().includes(term) ||
       (s.gradeLevel || "").toLowerCase().includes(term) || (s.section || "").toLowerCase().includes(term);
   });
 }
 
+function statusButton(status) {
+  if (status === "Casted") return `<button class="casted"><i class="ph ph-calendar-slash"></i>Casted</button>`;
+  return `<button class="available"><i class="ph ph-check-circle"></i>Available</button>`;
+}
+
 function renderStudents() {
+  const body = $("#table-body-student");
+  if (!body) return;
   const rows = filteredStudents();
   const shown = rows.slice(0, stuPage * STU_PAGE);
-  $("#stuBody").innerHTML = shown.length ? shown.map((s) => `
+  body.innerHTML = shown.length ? shown.map((s) => {
+    const qr = JSON.stringify({ verification_code: s.code || "", grade_level: s.gradeLevel || "", student_name: `${s.lastName || ""}, ${s.firstName || ""} ${s.middleName || ""}.`.replace(/\s+/g, " ").trim(), section: s.section || "" });
+    return `
     <tr>
-      <td><code>${escapeHtml(s.code || "-")}</code></td>
-      <td>${escapeHtml(D.fullName(s))}</td>
+      <td><i class="fa-regular fa-pen-to-square editicon" style="cursor:pointer" data-id="${s.id}" onclick="openStudent(this.dataset.id)"></i></td>
+      <td>${escapeHtml(String(s.id).slice(0, 8))}</td>
+      <td>${escapeHtml(s.code || "-")}</td>
+      <td><button class="qrbtn" title="Show QR" data-qr="${escapeHtml(qr)}" onclick="openQr(this.dataset.qr)"><i class="ph ph-qr-code"></i></button></td>
+      <td>${escapeHtml(s.firstName || "-")}</td>
+      <td>${escapeHtml(s.middleName || "")}</td>
+      <td>${escapeHtml(s.lastName || "-")}</td>
+      <td>${escapeHtml(s.gender || "-")}</td>
       <td>${escapeHtml(s.gradeLevel || "-")}</td>
       <td>${escapeHtml(s.section || "-")}</td>
-      <td>${s.voteStatus === "Casted" ? '<span class="badge badge-green">Casted</span>' : '<span class="badge badge-amber">Available</span>'}</td>
-      <td><div class="actions">
-        <button class="btn btn-ghost btn-sm" onclick="openStudent('${s.id}')"><i class="ph ph-pencil-simple"></i></button>
-        <button class="btn btn-danger btn-sm" onclick="removeStudent('${s.id}','${escapeHtml(D.fullName(s)).replace(/'/g, "\\'")}')"><i class="ph ph-trash"></i></button>
-      </div></td>
-    </tr>`).join("") : `<tr><td colspan="6"><div class="empty"><i class="ph ph-student"></i>No students found.</div></td></tr>`;
-  $("#stuMore").style.display = shown.length < rows.length ? "" : "none";
-  $("#stuCount").textContent = `Showing ${shown.length} of ${rows.length} student(s)`;
+      <td>${statusButton(s.voteStatus)}</td>
+      <td><i class="fa-solid fa-trash-can btn-delete-table" style="cursor:pointer" data-id="${s.id}" data-name="${escapeHtml(D.fullName(s))}" onclick="removeStudent(this.dataset.id, this.dataset.name)"></i></td>
+    </tr>`;
+  }).join("") : `<tr><td colspan="12" class="no-data">No data found!</td></tr>`;
+  if ($("#stuMore")) $("#stuMore").style.display = shown.length < rows.length ? "" : "none";
+  if ($("#stuCount")) $("#stuCount").textContent = `Showing ${shown.length} of ${rows.length} student(s)`;
 }
 window.loadMoreStudents = () => { stuPage += 1; renderStudents(); };
 
-window.generateCode = function () {
-  $("#stuCode").value = genCode();
-};
+function renderCasted() {
+  const body = $("#table-body-casted");
+  if (!body) return;
+  const rows = students.filter((s) => s.voteStatus === "Casted");
+  body.innerHTML = rows.length ? rows.map((s) => `
+    <tr>
+      <td>${escapeHtml(s.code || "-")}</td>
+      <td>${escapeHtml(s.firstName || "-")}</td>
+      <td>${escapeHtml(s.middleName || "")}</td>
+      <td>${escapeHtml(s.lastName || "-")}</td>
+      <td>${escapeHtml(s.gender || "-")}</td>
+      <td>${escapeHtml(s.gradeLevel || "-")}</td>
+      <td>${escapeHtml(s.section || "-")}</td>
+      <td>${statusButton(s.voteStatus)}</td>
+    </tr>`).join("") : `<tr><td colspan="8" class="no-data">No data found!</td></tr>`;
+}
+
+window.generateCode = function () { $("#stuCode").value = genCode(); };
 
 window.openStudent = function (id) {
   if (id) {
     const s = students.find((x) => x.id === id);
     if (!s) return;
-    $("#stuModalTitle").textContent = "Edit Student";
+    $("#stuModalTitle").textContent = "Update Student Information";
     $("#stuId").value = s.id;
     $("#stuFirst").value = s.firstName || "";
     $("#stuMiddle").value = s.middleName || "";
@@ -302,9 +367,25 @@ window.removeStudent = function (id, name) {
   });
 };
 
-$("#bulkFile").addEventListener("change", (e) => {
+// QR modal
+window.openQr = function (json) {
+  const host = $("#qr-picture");
+  host.innerHTML = "";
+  try {
+    const data = JSON.parse(json);
+    new window.QRCode(host, { text: JSON.stringify(data), width: 240, height: 240 });
+  } catch (_) {
+    host.innerHTML = `<p class="muted">Could not render QR code.</p>`;
+  }
+  $("#qr-pop").classList.add("show");
+};
+window.closeQr = function () { $("#qr-pop").classList.remove("show"); };
+
+// Bulk import
+$("#bulkFile")?.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
+  const nameEl = $("#csvFileName"); if (nameEl) nameEl.textContent = file.name;
   const reader = new FileReader();
   reader.onload = () => { $("#bulkText").value = String(reader.result || "").trim(); };
   reader.onerror = () => toast("Could not read that file.", "error");
@@ -322,7 +403,7 @@ window.importBulk = async function () {
   const usedCodes = new Set(students.map((s) => (s.code || "").trim()).filter(Boolean));
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
-    if (i === 0 && /first.?name/i.test(line)) continue; // skip CSV header
+    if (i === 0 && /first.?name/i.test(line)) continue;
     const parts = line.split(",").map((p) => p.trim());
     const [firstName, middleName, lastName, gender, gradeLevel, section] = parts;
     let code = parts[6] || "";
@@ -336,10 +417,24 @@ window.importBulk = async function () {
       ok++;
     } catch (_) { fail++; }
   }
-  btnLoading(btn, false, "Import Students");
+  btnLoading(btn, false, '<i class="ph ph-download-simple"></i> Import Students');
   showAlert(alertEl, `Imported ${ok} student(s)${fail ? `, ${fail} skipped` : ""}.`, fail ? "warning" : "success");
   toast(`Imported ${ok} students.`, "success");
-  if (ok) setTimeout(() => { closeModal("bulkModal"); $("#bulkText").value = ""; $("#bulkFile").value = ""; hideAlert(alertEl); }, 1600);
+};
+window.resetImport = function () {
+  if ($("#bulkText")) $("#bulkText").value = "";
+  if ($("#bulkFile")) $("#bulkFile").value = "";
+  if ($("#csvFileName")) $("#csvFileName").textContent = "";
+  hideAlert($("#bulkAlert"));
+};
+window.downloadTemplate = function () {
+  const csv = "FIRST NAME,MIDDLE INITIAL,LAST NAME,GENDER,GRADE LEVEL,SECTION\nJUAN,D,DELA CRUZ,Male,Grade 7,SAMPAGUITA\n";
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "students-template.csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
 };
 
 function genCode() {
@@ -358,28 +453,20 @@ function watchStaff() {
 }
 
 function renderAccounts() {
+  const body = $("#table-body-account");
+  if (!body) return;
   const term = accTerm.toLowerCase();
   const rows = staffList.filter((s) => !term || (s.name || "").toLowerCase().includes(term) || (s.username || "").toLowerCase().includes(term));
-  $("#accBody").innerHTML = rows.length ? rows.map((s) => `
+  body.innerHTML = rows.length ? rows.map((s) => `
     <tr>
-      <td>${escapeHtml(s.name)}</td>
-      <td><code>${escapeHtml(s.username)}</code></td>
-      <td><span class="badge badge-blue">${escapeHtml(s.role)}</span></td>
-      <td>${statusBadge(s.status)}</td>
+      <td><i class="fa-regular fa-pen-to-square editaccount" style="cursor:pointer" data-id="${s.id}" onclick="openStaff(this.dataset.id)"></i></td>
+      <td>${escapeHtml(s.name || "-")}</td>
+      <td>${escapeHtml(s.username || "-")}</td>
+      <td><button class="status status-btn" style="background:${s.status === "Approved" ? "#10b981" : "#ff5252"}" data-id="${s.id}" data-status="${escapeHtml(s.status || "")}" onclick="toggleStaffStatus(this.dataset.id, this.dataset.status)">${escapeHtml(s.status || "-")}</button></td>
+      <td>${escapeHtml(s.role || "-")}</td>
       <td>${fmtDate(s.createdAt)}</td>
-      <td><div class="actions">
-        <button class="btn btn-ghost btn-sm" onclick="openStaff('${s.id}')"><i class="ph ph-pencil-simple"></i></button>
-        ${s.status !== "Approved" ? `<button class="btn btn-success btn-sm" onclick="setStaffStatus('${s.id}','Approved')"><i class="ph ph-check"></i></button>` : ""}
-        ${s.status === "Approved" ? `<button class="btn btn-ghost btn-sm" onclick="setStaffStatus('${s.id}','Deactivated')"><i class="ph ph-prohibit"></i></button>` : ""}
-        ${s.id !== profile.id ? `<button class="btn btn-danger btn-sm" onclick="removeStaff('${s.id}','${escapeHtml(s.name || s.username)}')"><i class="ph ph-trash"></i></button>` : ""}
-      </div></td>
-    </tr>`).join("") : `<tr><td colspan="6"><div class="empty"><i class="ph ph-users-three"></i>No staff accounts.</div></td></tr>`;
-}
-
-function statusBadge(status) {
-  if (status === "Approved") return '<span class="badge badge-green">Approved</span>';
-  if (status === "Pending") return '<span class="badge badge-amber">Pending</span>';
-  return '<span class="badge badge-red">Deactivated</span>';
+      <td>${s.id !== profile.id ? `<i class="fa-solid fa-trash-can btn-delete-acc" style="cursor:pointer" data-id="${s.id}" data-name="${escapeHtml(s.name || s.username || "")}" onclick="removeStaff(this.dataset.id, this.dataset.name)"></i>` : ""}</td>
+    </tr>`).join("") : `<tr><td colspan="7" class="no-data">No data found!</td></tr>`;
 }
 
 window.openStaff = function (id) {
@@ -406,6 +493,10 @@ window.setStaffStatus = async function (uid, status) {
   try { await D.updateStaffStatus(uid, status); toast(`Account ${status.toLowerCase()}.`, "success"); }
   catch (err) { toast(err.message || "Update failed.", "error"); }
 };
+window.toggleStaffStatus = function (uid, current) {
+  const next = current === "Approved" ? "Deactivated" : "Approved";
+  window.setStaffStatus(uid, next);
+};
 window.removeStaff = function (uid, name) {
   confirmAction("Delete staff account?", `Remove ${name}'s profile? Their login will stop working.`, async () => {
     try { await D.deleteStaffProfile(uid); toast("Account removed.", "success"); }
@@ -416,25 +507,22 @@ window.removeStaff = function (uid, name) {
 // ---------------------------------------------------------------- login log
 async function renderLoginLog() {
   if (!profile || profile.role !== "Admin") return;
-  try {
-    loginLog = await D.listLoginLog();
-  } catch (err) {
-    $("#logBody").innerHTML = `<tr><td colspan="5"><div class="empty">${escapeHtml(err.message || "Could not load log.")}</div></td></tr>`;
-    return;
-  }
+  const body = $("#table-body-log");
+  if (!body) return;
+  try { loginLog = await D.listLoginLog(); }
+  catch (err) { body.innerHTML = `<tr><td colspan="5" class="no-data">${escapeHtml(err.message || "Could not load log.")}</td></tr>`; return; }
   const term = logTerm.toLowerCase();
   const rows = loginLog.filter((l) =>
     !term || (l.username || "").toLowerCase().includes(term) || (l.name || "").toLowerCase().includes(term) || (l.action || "").toLowerCase().includes(term));
-  $("#logBody").innerHTML = rows.length ? rows.map((l) => `
+  body.innerHTML = rows.length ? rows.map((l) => `
     <tr>
       <td>${fmtDate(l.at)}</td>
-      <td><code>${escapeHtml(l.username || "-")}</code></td>
+      <td>${escapeHtml(l.username || "-")}</td>
       <td>${escapeHtml(l.name || "-")}</td>
       <td>${escapeHtml(l.role || "-")}</td>
-      <td><span class="badge badge-blue">${escapeHtml(l.action || "login")}</span></td>
-    </tr>`).join("") : `<tr><td colspan="5"><div class="empty"><i class="ph ph-clock-counter-clockwise"></i>No login records yet.</div></td></tr>`;
+      <td>${escapeHtml(l.action || "login")}</td>
+    </tr>`).join("") : `<tr><td colspan="5" class="no-data">No login records yet.</td></tr>`;
 }
-window.renderLoginLog = renderLoginLog;
 
 // ---------------------------------------------------------------- password
 window.openPassword = function () {
@@ -457,25 +545,26 @@ window.savePassword = async function () {
   finally { btnLoading(btn, false, "Update Password"); }
 };
 
-// ---------------------------------------------------------------- settings
+// ---------------------------------------------------------------- settings & manage
 async function refreshLookups() {
   try {
-    const parties = await D.listParties();
-    $("#partyList").innerHTML = parties.map((p) => `<option value="${escapeHtml(p.name)}"></option>`).join("");
-  } catch (_) {}
+    partiesList = await D.listParties();
+    if ($("#partyList")) $("#partyList").innerHTML = partiesList.map((p) => `<option value="${escapeHtml(p.name)}"></option>`).join("");
+  } catch (_) { partiesList = []; }
   try {
-    const sections = await D.listSections();
-    $("#sectionList").innerHTML = sections.map((s) => `<option value="${escapeHtml(s.name)}"></option>`).join("");
-  } catch (_) {}
+    sectionsList = await D.listSections();
+    if ($("#sectionList")) $("#sectionList").innerHTML = sectionsList.map((s) => `<option value="${escapeHtml(s.name)}"></option>`).join("");
+  } catch (_) { sectionsList = []; }
+  renderManage();
 }
 
 function fillSettingsForm(s) {
-  $("#setSchool").value = s.schoolName;
-  $("#setElection").value = s.electionName;
-  $("#setYear").value = s.academicYear;
-  $("#setRepsRule").value = s.repsRule;
-  $("#setVoting").value = String(s.votingOpen);
-  $("#setResultsPublic").value = String(s.resultsPublic);
+  if ($("#setSchool")) $("#setSchool").value = s.schoolName;
+  if ($("#setElection")) $("#setElection").value = s.electionName;
+  if ($("#setYear")) $("#setYear").value = s.academicYear;
+  if ($("#setRepsRule")) $("#setRepsRule").value = s.repsRule;
+  if ($("#setVoting")) $("#setVoting").value = String(s.votingOpen);
+  if ($("#setResultsPublic")) $("#setResultsPublic").value = String(s.resultsPublic);
 }
 
 window.saveSettingsForm = async function () {
@@ -500,103 +589,85 @@ window.seedDefaults = function () {
       settings = await D.getSettings();
       fillSettingsForm(settings);
       renderOverview();
+      renderManage();
     } catch (err) { toast(err.message || "Failed.", "error"); }
   });
 };
 
-let lookupKind = null;
-window.manageLookup = async function (kind) {
-  lookupKind = kind;
-  $("#lookupTitle").textContent = `Manage ${kind[0].toUpperCase() + kind.slice(1)}`;
-  renderLookupExtra();
-  $("#lookupInput").value = "";
-  await renderLookup();
-  openModal("lookupModal");
+function rowsHtml(items, kind, cols) {
+  if (!items.length) return `<tr><td colspan="${cols}" class="no-data">No data found!</td></tr>`;
+  return items.map((i) => {
+    const editCell = `<td><i class="fa-regular fa-pen-to-square" style="cursor:pointer" data-kind="${kind}" data-id="${i.id}" data-name="${escapeHtml(i.name)}" onclick="editLookupEntry(this.dataset.kind, this.dataset.id, this.dataset.name)"></i></td>`;
+    const delCell = `<td><i class="fa-solid fa-trash-can btn-delete" style="cursor:pointer" data-kind="${kind}" data-id="${i.id}" onclick="delLookupEntry(this.dataset.kind, this.dataset.id)"></i></td>`;
+    let mid;
+    if (kind === "positions") mid = `<td>${escapeHtml(i.name)}</td><td>${i.slots || 1}</td>`;
+    else if (kind === "sections") mid = `<td>${escapeHtml(i.gradeLevel || "-")}</td><td>${escapeHtml(i.name)}</td>`;
+    else mid = `<td>${escapeHtml(i.name)}</td>`;
+    return `<tr>${editCell}${mid}${delCell}</tr>`;
+  }).join("");
+}
+
+async function renderManage() {
+  try { yearsList = await D.listYears(); } catch (_) { yearsList = []; }
+  try { partiesList = await D.listParties(); } catch (_) { partiesList = []; }
+  try { sectionsList = await D.listSections(); } catch (_) { sectionsList = []; }
+  try { positionsList = await D.listPositions(); } catch (_) { if (!positionsList.length) positionsList = D.DEFAULT_POSITIONS.map((p, i) => ({ id: `default-${i}`, ...p })); }
+
+  if ($("#add-pos-scope") && !$("#add-pos-scope").options.length)
+    $("#add-pos-scope").innerHTML = D.POSITION_SCOPES.map((s) => `<option value="${s.value}">${s.label}</option>`).join("");
+
+  if ($("#party-table-body")) $("#party-table-body").innerHTML = rowsHtml(partiesList, "parties", 3);
+  if ($("#year-table-body")) $("#year-table-body").innerHTML = rowsHtml(yearsList, "years", 3);
+  if ($("#section-table-body")) $("#section-table-body").innerHTML = rowsHtml(sectionsList, "sections", 4);
+  if ($("#position-table-body")) $("#position-table-body").innerHTML = rowsHtml(positionsList, "positions", 4);
+}
+
+window.addPartyInline = async function () {
+  const name = $("#add-party").value.trim();
+  if (!name) return;
+  try { await D.addLookup("parties", { name }); $("#add-party").value = ""; await refreshLookups(); toast("Party added.", "success"); }
+  catch (err) { toast(err.message || "Failed.", "error"); }
 };
-
-function renderLookupExtra() {
-  const host = $("#lookupExtra");
-  if (lookupKind === "positions") {
-    host.innerHTML = `
-      <div class="grid cols-2" style="gap:12px;margin-bottom:10px">
-        <div><label class="lbl">Scope</label>
-          <select class="input-inline" id="lookupScope">${D.POSITION_SCOPES.map((s) => `<option value="${s.value}">${s.label}</option>`).join("")}</select>
-        </div>
-        <div><label class="lbl">Slots (winners)</label>
-          <input class="input-inline" id="lookupSlots" type="number" min="1" value="1" />
-        </div>
-      </div>`;
-  } else if (lookupKind === "sections") {
-    host.innerHTML = `<label class="lbl">Grade Level</label>
-      <select class="input-inline" id="lookupGrade" style="margin-bottom:10px">
-        <option value="">Any</option>${D.GRADES.map((g) => `<option>${g}</option>`).join("")}
-      </select>`;
-  } else {
-    host.innerHTML = "";
-  }
-}
-
-async function renderLookup() {
-  let items = [];
-  try {
-    if (lookupKind === "positions") items = await D.listPositions();
-    else if (lookupKind === "parties") items = await D.listParties();
-    else if (lookupKind === "years") items = await D.listYears();
-    else items = await D.listSections();
-  } catch (err) { items = []; toast(err.message || "Could not load entries.", "error"); }
-
-  if (lookupKind === "positions" && !items.length) {
-    $("#lookupList").innerHTML = '<p class="muted" style="font-size:13px">No positions yet. Add one below, or click "Initialize Default Data" in Settings.</p>';
-    return;
-  }
-  $("#lookupList").innerHTML = items.length ? items.map((i) => `
-    <div class="lookup-item">
-      <span>${escapeHtml(i.name)}${i.gradeLevel ? ` <span class="muted">(${escapeHtml(i.gradeLevel)})</span>` : ""}${i.scope ? ` <span class="muted">[${escapeHtml(i.scope)}]</span>` : ""}${i.slots ? ` <span class="muted">· ${i.slots} slot(s)</span>` : ""}</span>
-      <span style="display:flex;gap:6px">
-        <button onclick="editLookupEntry('${i.id}','${escapeHtml(i.name).replace(/'/g, "\\'")}')" title="Rename"><i class="ph ph-pencil-simple"></i></button>
-        <button onclick="delLookupEntry('${i.id}')" title="Delete"><i class="ph ph-trash"></i></button>
-      </span>
-    </div>`).join("") : '<p class="muted" style="font-size:13px">No entries yet.</p>';
-}
-
-window.addLookupEntry = async function () {
-  const name = $("#lookupInput").value.trim();
+window.addPositionInline = async function () {
+  const name = $("#add-pos-name").value.trim();
   if (!name) return;
   try {
-    if (lookupKind === "positions") {
-      await D.addPosition({ name, scope: $("#lookupScope")?.value || "all", slots: Number($("#lookupSlots")?.value) || 1 });
-      await loadPositions();
-    } else if (lookupKind === "sections") {
-      await D.addLookup("sections", { name, gradeLevel: $("#lookupGrade")?.value || "" });
-    } else {
-      await D.addLookup(lookupKind, { name });
-    }
-    $("#lookupInput").value = "";
-    await renderLookup();
-    await refreshLookups();
-    toast("Added.", "success");
+    await D.addPosition({ name, scope: $("#add-pos-scope").value || "all", slots: Number($("#add-pos-slots").value) || 1 });
+    $("#add-pos-name").value = "";
+    await loadPositions(); await renderManage(); toast("Position added.", "success");
   } catch (err) { toast(err.message || "Failed.", "error"); }
 };
+window.addYearInline = async function () {
+  const name = $("#add-year").value.trim();
+  if (!name) return;
+  try { await D.addLookup("years", { name }); $("#add-year").value = ""; await refreshLookups(); toast("Year added.", "success"); }
+  catch (err) { toast(err.message || "Failed.", "error"); }
+};
+window.addSectionInline = async function () {
+  const name = $("#add-sec-name").value.trim();
+  const gradeLevel = $("#add-sec-grade").value;
+  if (!name) return;
+  try { await D.addLookup("sections", { name, gradeLevel }); $("#add-sec-name").value = ""; await refreshLookups(); toast("Section added.", "success"); }
+  catch (err) { toast(err.message || "Failed.", "error"); }
+};
 
-window.editLookupEntry = async function (id, oldName) {
+window.editLookupEntry = async function (kind, id, oldName) {
   const name = window.prompt("Rename entry:", oldName);
   if (!name || name.trim() === oldName) return;
   try {
-    await D.updateLookup(lookupKind, id, { name: name.trim() });
-    await renderLookup();
+    await D.updateLookup(kind, id, { name: name.trim() });
     await refreshLookups();
-    if (lookupKind === "positions") await loadPositions();
+    if (kind === "positions") { await loadPositions(); await renderManage(); }
     toast("Renamed.", "success");
   } catch (err) { toast(err.message || "Failed.", "error"); }
 };
 
-window.delLookupEntry = function (id) {
+window.delLookupEntry = function (kind, id) {
   confirmAction("Delete entry?", "Remove this entry? Candidates or students referencing it are not changed.", async () => {
     try {
-      await D.deleteLookup(lookupKind, id);
-      await renderLookup();
+      await D.deleteLookup(kind, id);
       await refreshLookups();
-      if (lookupKind === "positions") await loadPositions();
+      if (kind === "positions") { await loadPositions(); await renderManage(); }
       toast("Removed.", "success");
     } catch (err) { toast(err.message || "Failed.", "error"); }
   });
@@ -621,22 +692,23 @@ window.archiveNow = function () {
 
 let archiveItems = [];
 async function renderArchive() {
+  const body = $("#archive-list-body");
+  if (!body) return;
   try {
     archiveItems = await D.listArchive();
-    $("#archiveList").innerHTML = archiveItems.length ? archiveItems.map((a) => `
-      <div class="card" style="margin-bottom:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
-          <div>
-            <div class="section-title" style="margin:0">${escapeHtml(a.electionName)} ${escapeHtml(a.academicYear)}</div>
-            <span class="muted" style="font-size:12.5px">Archived by ${escapeHtml(a.archivedBy)} &middot; ${fmtDate(a.archivedAt)} &middot; ${a.stats ? a.stats.casted : 0} ballots of ${a.stats ? a.stats.registered : 0} voters</span>
-          </div>
-          <div class="actions">
-            <button class="btn btn-ghost btn-sm" onclick="viewArchive('${a.id}')"><i class="ph ph-eye"></i> View</button>
-            <button class="btn btn-danger btn-sm" onclick="removeArchive('${a.id}')"><i class="ph ph-trash"></i> Delete</button>
-          </div>
-        </div>
-      </div>`).join("") : `<div class="empty card"><i class="ph ph-archive"></i>No archived elections yet.</div>`;
-  } catch (err) { $("#archiveList").innerHTML = `<div class="empty card">${escapeHtml(err.message || "Could not load archive.")}</div>`; }
+    body.innerHTML = archiveItems.length ? archiveItems.map((a) => `
+      <tr>
+        <td>${escapeHtml(a.electionName)}</td>
+        <td>${escapeHtml(a.academicYear)}</td>
+        <td>${a.stats ? a.stats.registered : 0}</td>
+        <td>${a.stats ? a.stats.casted : 0}</td>
+        <td>${fmtDate(a.archivedAt)}</td>
+        <td><div class="actions">
+          <button class="btn btn-ghost btn-sm" onclick="viewArchive('${a.id}')"><i class="ph ph-eye"></i> View</button>
+          <button class="btn btn-danger btn-sm" onclick="removeArchive('${a.id}')"><i class="ph ph-trash"></i></button>
+        </div></td>
+      </tr>`).join("") : `<tr><td colspan="6" class="no-data">No archived elections yet.</td></tr>`;
+  } catch (err) { body.innerHTML = `<tr><td colspan="6" class="no-data">${escapeHtml(err.message || "Could not load archive.")}</td></tr>`; }
 }
 
 window.viewArchive = function (id) {
@@ -653,8 +725,7 @@ window.viewArchive = function (id) {
       <div class="stat"><div class="val">${a.stats ? a.stats.turnout : 0}%</div><div class="lbl2">Turnout</div></div>
     </div>
     <div class="section-title">Winners</div>
-    ${winners.length ? winners.map((w) => `<div class="lookup-item"><span>${escapeHtml(w.position)} — <b>${escapeHtml(w.name)}</b></span><span class="muted">${w.total}</span></div>`).join("") : '<p class="muted">No winners recorded.</p>'}
-  `;
+    ${winners.length ? winners.map((w) => `<div class="lookup-item"><span>${escapeHtml(w.position)} — <b>${escapeHtml(w.name)}</b></span><span class="muted">${w.total}</span></div>`).join("") : '<p class="muted">No winners recorded.</p>'}`;
   openModal("archiveModal");
 };
 
@@ -673,17 +744,16 @@ function confirmAction(title, msg, onYes) {
   confirmHandler = onYes;
   openModal("confirmModal");
 }
-$("#confirmYes").addEventListener("click", async () => {
+$("#confirmYes")?.addEventListener("click", async () => {
   const fn = confirmHandler; confirmHandler = null; closeModal("confirmModal");
   if (fn) await fn();
 });
 
 // ---------------------------------------------------------------- search
-$("#candSearch").addEventListener("input", (e) => { candTerm = e.target.value.trim(); renderCandidates(); });
-$("#stuSearch").addEventListener("input", (e) => { stuTerm = e.target.value.trim(); stuPage = 1; renderStudents(); });
-$("#stuFilterGrade").addEventListener("change", (e) => { stuGradeFilter = e.target.value; stuPage = 1; renderStudents(); });
-$("#accSearch").addEventListener("input", (e) => { accTerm = e.target.value.trim(); renderAccounts(); });
-$("#logSearch").addEventListener("input", (e) => { logTerm = e.target.value.trim(); renderLoginLog(); });
+$("#search-candidate")?.addEventListener("input", (e) => { candTerm = e.target.value.trim(); renderCandidates(); });
+$("#search-student")?.addEventListener("input", (e) => { stuTerm = e.target.value.trim(); stuPage = 1; renderStudents(); });
+$("#search-account")?.addEventListener("input", (e) => { accTerm = e.target.value.trim(); renderAccounts(); });
+$("#search-log")?.addEventListener("input", (e) => { logTerm = e.target.value.trim(); renderLoginLog(); });
 
 main().catch((err) => {
   console.error(err);

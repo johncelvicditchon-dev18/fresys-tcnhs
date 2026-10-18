@@ -1,10 +1,23 @@
 import { signInAnonymously, auth, onAuthStateChanged } from "./firebase.js";
 import { verifyStudent } from "./data.js";
-import { $, toast, showAlert, hideAlert, btnLoading } from "./ui.js";
+import { $, escapeHtml, btnLoading } from "./ui.js";
 
-const alertEl = $("#alert");
-const form = $("#codeForm");
+const successEl = $("#success");
+const errorEl = $("#error");
+const form = $("#manualVerify");
 const submitBtn = $("#submitBtn");
+
+function hideMsgs() {
+  if (successEl) { successEl.className = "success"; successEl.innerHTML = ""; }
+  if (errorEl) { errorEl.className = "error"; errorEl.innerHTML = ""; }
+}
+function showMsg(message, type = "error") {
+  hideMsgs();
+  const el = type === "success" ? successEl : errorEl;
+  if (!el) return;
+  el.className = (type === "success" ? "success" : "error") + " show";
+  el.innerHTML = `<i class="ph ${type === "success" ? "ph-check-circle" : "ph-warning-circle"}"></i><span>${escapeHtml(message)}</span>`;
+}
 
 function goBallot(student, code, gradeLevel) {
   sessionStorage.setItem("fresys_student", JSON.stringify({
@@ -26,24 +39,24 @@ async function ensureAnon() {
 }
 
 async function attemptVerify(code, gradeLevel) {
-  hideAlert(alertEl);
+  hideMsgs();
   btnLoading(submitBtn, true);
   try {
     await ensureAnon();
     const res = await verifyStudent(code, gradeLevel);
     if (res.ok) {
-      toast("Identity verified. Loading your ballot...", "success");
-      setTimeout(() => goBallot(res.student, code, gradeLevel), 500);
+      showMsg("Identity verified. Loading your ballot...", "success");
+      setTimeout(() => goBallot(res.student, code, gradeLevel), 600);
       return;
     }
-    if (res.reason === "alreadycasted") showAlert(alertEl, "This student has already cast a vote.", "warning");
-    else if (res.reason === "missing") showAlert(alertEl, "Please enter your verification code.", "error");
-    else showAlert(alertEl, "Invalid code or grade level. Please check and try again.", "error");
+    if (res.reason === "alreadycasted") showMsg("This student has already cast a vote.", "error");
+    else if (res.reason === "missing") showMsg("Please enter your verification code.", "error");
+    else showMsg("Invalid code or grade level. Please check and try again.", "error");
   } catch (err) {
     console.error(err);
-    showAlert(alertEl, err.message || "Verification failed. Please try again.", "error");
+    showMsg(err.message || "Verification failed. Please try again.", "error");
   } finally {
-    btnLoading(submitBtn, false, '<i class="ph ph-sign-in"></i> Continue to Ballot');
+    btnLoading(submitBtn, false, '<i class="fa-solid fa-right-to-bracket"></i> Continue');
   }
 }
 
@@ -54,7 +67,7 @@ form.addEventListener("submit", (e) => {
 
 // ------------------------------- QR tab ------------------------------------
 const maniBtn = $("#maniBtn"), qrBtn = $("#qrBtn");
-const codePane = form, qrPane = $("#qrPane");
+const codePane = form, qrPane = $("#qrVerify");
 let scanner = null;
 
 maniBtn.addEventListener("click", () => {
@@ -71,7 +84,7 @@ qrBtn.addEventListener("click", () => {
 function parseQr(text) {
   try {
     const obj = JSON.parse(text);
-    if (obj && obj.code) return { code: String(obj.code).trim(), grade: obj.grade || obj.gradeLevel || "" };
+    if (obj && (obj.code || obj.verification_code)) return { code: String(obj.code || obj.verification_code).trim(), grade: obj.grade || obj.gradeLevel || obj.grade_level || "" };
   } catch (_) { /* not JSON */ }
   const parts = String(text).split("|").map((s) => s.trim());
   if (parts.length >= 2 && /^grade/i.test(parts[0])) return { code: parts[1], grade: parts[0] };
@@ -81,7 +94,7 @@ function parseQr(text) {
 
 function startScanner() {
   if (scanner) return;
-  if (!window.Html5Qrcode) { showAlert(alertEl, "QR scanner failed to load. Please enter your code manually.", "error"); return; }
+  if (!window.Html5Qrcode) { showMsg("QR scanner failed to load. Please enter your code manually.", "error"); return; }
   scanner = new window.Html5Qrcode("reader");
   scanner.start(
     { facingMode: "environment" },
@@ -91,14 +104,14 @@ function startScanner() {
       stopScanner();
       if (!grade) {
         maniBtn.click();
-        showAlert(alertEl, "QR read. Please select your grade level and press Continue.", "info");
+        showMsg("QR read. Please select your grade level and press Continue.", "error");
         $("#code").value = code;
         return;
       }
       attemptVerify(code, grade);
     },
     () => {}
-  ).catch(() => showAlert(alertEl, "Unable to access the camera. Please enter your code manually.", "error"));
+  ).catch(() => showMsg("Unable to access the camera. Please enter your code manually.", "error"));
 }
 
 async function stopScanner() {

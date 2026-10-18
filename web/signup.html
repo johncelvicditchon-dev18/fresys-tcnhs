@@ -1,57 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Staff Sign Up | FRESYS-TCNHS</title>
-  <link rel="icon" href="assets/pictures/tcnhs_logo.png" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <link rel="icon" href="assets/pictures/tcnhs_logo.png">
+  <title>Sign Up | Tangub City NHS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/auth.css">
 </head>
+
 <body>
-  <div class="bggg-backdrop"></div>
-  <main class="auth-wrap">
-    <section class="auth-box">
+  <main class="container">
+    <section class="box">
       <button class="top-back" onclick="location.href='index.html'"><i class="ph ph-x"></i></button>
-      <div class="box-logo"><img src="assets/pictures/tcnhs_logo.png" alt="Logo" /></div>
-      <h1>Create Account</h1>
-      <p class="sub">Sign up for Admin or Adviser access</p>
+      <div class="box-logo">
+        <img src="assets/pictures/tcnhs_logo.png" alt="Logo">
+      </div>
+      <h3>Create Account</h3>
+      <p class="sub">Sign up for Admin and Adviser access</p>
 
-      <div class="alert" id="alert"></div>
-
+      <div class="success" id="success"></div>
+      <div class="error" id="error"></div>
       <form id="signupForm">
-        <div class="field">
-          <i class="ph ph-student ph"></i>
-          <input type="text" id="name" placeholder=" " required />
-          <label class="fl" for="name">Adviser / Teacher Name</label>
+        <div class="input-group">
+          <i class="ph ph-student"></i>
+          <input type="text" id="name" name="teachername" placeholder=" " required>
+          <label for="name">Adviser/Teacher Name</label>
         </div>
-        <div class="field">
-          <i class="ph ph-user-gear ph"></i>
-          <select id="role" required>
+        <div class="input-group">
+          <i class="ph ph-user-gear"></i>
+          <select name="role" id="role" required>
             <option value="" disabled selected>Select Access</option>
             <option value="Admin">Admin</option>
             <option value="Adviser">Adviser</option>
           </select>
-          <i class="ph ph-caret-down ph-caret"></i>
+          <i class="ph ph-caret-down"></i>
         </div>
-        <div class="field">
-          <i class="ph ph-user ph"></i>
-          <input type="text" id="username" placeholder=" " autocomplete="username" required />
-          <label class="fl" for="username">Username</label>
+        <div class="input-group">
+          <i class="ph ph-user"></i>
+          <input type="text" id="username" name="username" placeholder=" " autocomplete="username" required>
+          <label for="username">Username</label>
         </div>
-        <div class="field">
-          <i class="fa-solid fa-unlock ph"></i>
-          <input type="password" id="password" placeholder=" " autocomplete="new-password" minlength="6" required />
-          <label class="fl" for="password">Password (min 6 characters)</label>
+        <div class="input-group">
+          <i class="fa-solid fa-unlock"></i>
+          <input type="password" id="password" name="password" placeholder=" " autocomplete="new-password" minlength="6" required>
+          <label for="password">Password</label>
+          <i class="ph ph-eye" id="show"></i>
+          <i class="ph ph-eye-slash" id="donotshow"></i>
         </div>
-        <button type="submit" class="btn btn-primary" id="submitBtn"><i class="ph ph-user-plus"></i> Create Account</button>
+
+        <button type="submit" class="login-btn" id="submitBtn">
+          <i class="fa-solid fa-right-to-bracket"></i> Create Account
+        </button>
       </form>
 
-      <div class="auth-foot">Already have an account? <a href="login.html">Login</a></div>
+      <div class="account">
+        Already have an account? <a href="login.html">Login</a>
+      </div>
     </section>
   </main>
+
   <script type="module" src="js/signup.js"></script>
 </body>
+
 </html>

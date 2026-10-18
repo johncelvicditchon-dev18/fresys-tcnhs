@@ -1,76 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Official Ballot | FRESYS-TCNHS</title>
-  <link rel="icon" href="assets/pictures/tcnhs_logo.png" />
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/ballot.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-</head>
-<body>
-  <div id="loading" class="center-screen">
-    <div class="spinner" style="width:34px;height:34px;border-width:3px"></div>
-    <p class="muted">Preparing your ballot...</p>
-  </div>
 
-  <div id="app" style="display:none">
-    <header class="ballot-top">
-      <div class="inner">
-        <div class="school">
-          <img src="assets/pictures/tcnhs_logo.png" alt="logo" />
-          <div>
-            <h2 id="schoolName">TANGUB CITY NATIONAL HIGH SCHOOL</h2>
-            <span id="electionName">SUPREME STUDENT LEARNER GOVERNMENT ELECTION</span>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>official-ballot-tcnhs</title>
+  <link rel="icon" href="assets/pictures/tcnhs_logo.png">
+  <link rel="stylesheet" href="css/ballot.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap">
+  <style>
+    /* generic section styling (matches the grouped original selectors) so custom positions work too */
+    .candidate-section {
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+      margin-bottom: 24px;
+    }
+    .candidate-section .headbox h2 {
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0;
+      color: var(--text-dark);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .candidate-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      justify-items: center;
+    }
+    /* first rendered section clears the fixed header */
+    .ballot-first {
+      margin-top: 110px;
+    }
+    #loadingNotice {
+      max-width: 1400px;
+      margin: 120px auto;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.6);
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+    @media (max-width: 768px) {
+      .candidate-section { padding: 18px 16px; }
+      .candidate-section .headbox h2 { font-size: 13px; }
+    }
+    @media (max-width: 479px) {
+      .candidate-section { padding: 12px 10px; border-radius: 12px; margin-bottom: 16px; }
+      .candidate-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+      .ballot-first { margin-top: 240px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="loadingNotice">Preparing your ballot...</div>
+
+  <div class="layout" id="app" style="display:none">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="header-left">
+        <img src="assets/pictures/tcnhs_logo.png" alt="School Logo">
+        <img src="assets/pictures/sslg_logo.jpg" alt="SSLG Logo">
+      </div>
+      <div class="header-header">
+        <h2 id="schoolName">TANGUB CITY NATIONAL HIGH SCHOOL</h2>
+        <h2 id="electionName">SUPREME STUDENT LEARNER GOVERNMENT ELECTION</h2>
+        <h2 id="academicYear">2026-2027</h2>
+      </div>
+      <div class="header-right">
+        <div class="header-profile" id="header-profile">
+          <div class="header-avatar">
+            <i class="ph ph-user"></i>
           </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="stu-chip">
-            <div class="av"><i class="ph ph-user"></i></div>
-            <div>
-              <b id="stuName">Student</b>
-              <span id="stuMeta">Grade</span>
+          <div class="header-student-info">
+            <span class="header-student-name" id="stuName">Student</span>
+            <span class="header-student-section" id="stuMeta">Grade</span>
+          </div>
+          <div class="header-dropdown" id="header-dropdown">
+            <div class="header-dropdown-header">
+              <div class="header-dropdown-avatar">
+                <i class="ph ph-user"></i>
+              </div>
+              <div class="header-dropdown-info">
+                <span class="header-dropdown-name" id="ddName">Student</span>
+                <span class="header-dropdown-role" id="ddMeta">Grade</span>
+              </div>
             </div>
+            <div class="header-dropdown-divider"></div>
+            <button class="header-dropdown-item header-dropdown-logout" onclick="ballotLogout()">
+              <i class="ph ph-sign-out"></i>
+              <span>Log Out</span>
+            </button>
           </div>
-          <button class="logout-mini" title="Log out" onclick="ballotLogout()"><i class="ph ph-sign-out"></i></button>
         </div>
       </div>
     </header>
 
-    <div class="ballot-body">
-      <div class="ballot-intro">
-        <h1>Official Ballot</h1>
-        <p id="ballotHint">Select your candidates. Choices cannot be changed after submission.</p>
-      </div>
-      <div id="positions"></div>
-    </div>
+    <!-- CANDIDATE SECTIONS (rendered by JS) -->
+    <div id="sections"></div>
 
-    <div class="ballot-bar">
-      <div class="inner">
-        <div class="summary" id="summary">0 of 0 positions completed</div>
-        <div style="display:flex;gap:10px">
-          <button class="btn btn-ghost" onclick="ballotLogout()">Cancel</button>
-          <button class="btn btn-primary" style="width:auto" id="reviewBtn" onclick="openReview()"><i class="ph ph-list-checks"></i> Review &amp; Submit</button>
-        </div>
+    <section class="buttonnss">
+      <div class="button-groups">
+        <button type="button" class="cancelvote" onclick="ballotLogout()">Cancel</button>
+        <button type="button" class="review" onclick="review()">Review your votes</button>
       </div>
-    </div>
+    </section>
+
   </div>
 
-  <!-- Review modal -->
-  <div class="modal review-modal" id="reviewModal">
-    <div class="modal-box">
-      <h3>Review Your Votes</h3>
-      <p class="modal-sub">Please confirm your selections before submitting. This action is final.</p>
-      <div class="review-list" id="reviewList"></div>
-      <div class="modal-actions">
-        <button class="btn btn-ghost" onclick="closeModal('reviewModal')">Go Back</button>
-        <button class="btn btn-primary" style="width:auto" id="confirmBtn" onclick="confirmSubmit()"><i class="ph ph-check-circle"></i> Confirm &amp; Submit</button>
+
+  <!-- REVIEW MODAL -->
+  <div id="reviewModal" class="review-modal">
+    <div class="review-content">
+
+      <div class="review-header">
+        <div class="student-info">
+          <div class="flexinfo"><strong>ID: </strong><input type="text" id="ballot_id" readonly></div>
+          <div class="flexinfo"><strong>STUDENT: </strong><input type="text" id="ballot_name" readonly></div>
+          <div class="flexinfo"><strong>GENDER: </strong><input type="text" id="ballot_gender" readonly></div>
+          <div class="flexinfo"><strong>GRADE LEVEL: </strong><input type="text" id="ballot_grade" readonly></div>
+          <div class="flexinfo"><strong>SECTION: </strong><input type="text" id="ballot_section" readonly></div>
+        </div>
+
+        <div class="review-logo">
+          <img src="assets/pictures/sslg_logo.jpg" alt="SSLG Logo">
+        </div>
+      </div>
+
+      <h2>REVIEW YOUR VOTES</h2>
+
+      <div id="reviewBody" class="review-body">
+        <div class="section-group-vote" id="reviewGrid"></div>
+      </div>
+
+      <div class="review-actions">
+        <button type="button" class="btn-cancel" onclick="closeReview()">GO BACK</button>
+        <button type="button" class="btn-confirm" onclick="confirm_submit()">CONFIRM &amp; SUBMIT</button>
       </div>
     </div>
   </div>
 
   <script type="module" src="js/ballot.js"></script>
 </body>
+
 </html>

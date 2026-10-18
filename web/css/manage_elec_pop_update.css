@@ -1,0 +1,182 @@
+.update-party,
+.update-year,
+.update-school,
+.update-section {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(.2);
+    background: var(--card);
+    z-index: 1001;
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    width: 100%;
+    max-width: 400px;
+    animation: popIn .3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    display: none;
+}
+
+@keyframes popIn {
+    to {
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.update-party-header,
+.update-year-header,
+.update-school-header,
+.update-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.selectdiv {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.caretforupdatesectiontograde {
+    position: absolute;
+    top: 38px;
+    right: 14px;
+    color: var(--text-muted);
+    pointer-events: none;
+    transition: all .3s ease;
+}
+
+.selectdiv:focus-within .caretforupdatesectiontograde {
+    transform: rotate(180deg);
+    color: var(--primary);
+}
+
+.update-party-header h2,
+.update-year-header h2,
+.update-school-header h2,
+.update-section-header h2 {
+    color: var(--text-dark);
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.update-party-input label,
+.update-year-input label,
+.update-school-input label,
+.update-section-input label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-medium);
+    margin-bottom: 6px;
+    display: block;
+}
+
+.update-party-input,
+.update-year-input,
+.update-school-input,
+.update-section-input {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 14px;
+}
+
+.update-party-input input,
+.update-year-input input,
+.update-school-input input,
+.update-section-input input,
+.update-section-input select {
+    padding: 11px 14px;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--text-dark);
+    font-size: 14px;
+    outline: none;
+    -moz-appearance: none;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.update-party-input input::placeholder,
+.update-year-input input::placeholder,
+.update-school-input input::placeholder,
+.update-section-input input::placeholder {
+    color: var(--text-muted);
+}
+
+#grade__section {
+    margin-bottom: 12px;
+}
+
+.update-section-input select {
+    cursor: pointer;
+}
+
+.update-party-input input:focus,
+.update-year-input input:focus,
+.update-school-input input:focus,
+.update-section-input input:focus,
+.update-section-input select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+.update-party-button,
+.update-year-button,
+.update-school-button,
+.update-section-button {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.update-party-button button,
+.update-year-button button,
+.update-school-button button,
+.update-section-button button {
+    flex: 1;
+    padding: 11px;
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.25s ease;
+}
+
+.updatepartysave,
+.updateyearsave,
+.updateschoolsave,
+.updatesectionsave {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}
+
+.updatepartysave:hover,
+.updateyearsave:hover,
+.updateschoolsave:hover,
+.updatesectionsave:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+}
+
+.cancelupdateparty,
+.cancelupdateyear,
+.cancelupdateschool,
+.cancelupdatesection {
+    background: var(--bg-alt);
+    color: var(--text-medium);
+    border: 1px solid var(--border) !important;
+}
+
+.cancelupdateparty:hover,
+.cancelupdateyear:hover,
+.cancelupdateschool:hover,
+.cancelupdatesection:hover {
+    background: var(--border);
+}

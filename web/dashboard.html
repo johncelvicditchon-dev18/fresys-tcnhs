@@ -1,192 +1,421 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard | FRESYS-TCNHS</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Tangub City NHS</title>
   <link rel="icon" href="assets/pictures/tcnhs_logo.png" />
-  <link rel="stylesheet" href="css/style.css" />
-  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/overview.css">
+  <link rel="stylesheet" href="css/manage_election.css">
+  <link rel="stylesheet" href="css/update_candidate_pop.css">
+  <link rel="stylesheet" href="css/update_account_pop.css">
+  <link rel="stylesheet" href="css/manage_elec_pop_update.css">
+  <link rel="stylesheet" href="css/delete_pop_up.css">
+  <link rel="stylesheet" href="css/dashboard-app.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 </head>
+
 <body>
-  <div id="loading" class="center-screen">
+  <div id="loading" style="display:flex;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#94a3b8;font-family:Inter,sans-serif">
     <div class="spinner" style="width:34px;height:34px;border-width:3px"></div>
-    <p class="muted">Signing you in...</p>
+    <p>Signing you in...</p>
   </div>
 
-  <div class="app-shell" id="app" style="display:none">
-    <!-- SIDEBAR -->
-    <aside class="sidebar" id="sidebar">
-      <div class="brand">
-        <img src="assets/pictures/tcnhs_logo.png" alt="logo" />
-        <div><b>FRESYS</b><span>Election Control Panel</span></div>
-      </div>
-      <div class="nav-group-title">Main</div>
-      <button class="nav-item active" data-view="overview"><i class="ph ph-squares-four"></i> Overview</button>
-      <button class="nav-item" data-view="candidates"><i class="ph ph-user-list"></i> Candidates</button>
-      <button class="nav-item" data-view="students"><i class="ph ph-student"></i> Students</button>
-      <a class="nav-item" href="results.html"><i class="ph ph-chart-bar"></i> Results &amp; Winners</a>
-      <div class="nav-group-title admin-only">Administration</div>
-      <button class="nav-item admin-only" data-view="accounts"><i class="ph ph-users-three"></i> Accounts</button>
-      <button class="nav-item admin-only" data-view="loginlog"><i class="ph ph-clock-counter-clockwise"></i> Login Log</button>
-      <button class="nav-item admin-only" data-view="settings"><i class="ph ph-gear-six"></i> Settings</button>
-      <button class="nav-item admin-only" data-view="archive"><i class="ph ph-archive"></i> Archive</button>
-      <div class="nav-group-title">Session</div>
-      <button class="nav-item" onclick="openPassword()"><i class="ph ph-key"></i> Change Password</button>
-      <button class="nav-item" onclick="doLogout()"><i class="ph ph-sign-out"></i> Log Out</button>
-    </aside>
+  <div id="app" style="display:none">
+    <div class="layout">
 
-    <!-- MAIN -->
-    <main class="main">
-      <div class="topbar">
-        <div style="display:flex;align-items:center;gap:12px">
-          <button class="btn btn-ghost btn-sm hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')"><i class="ph ph-list"></i></button>
-          <div>
-            <h1 id="viewTitle">Overview</h1>
-            <div class="sub" id="viewSub">Election at a glance</div>
-          </div>
+      <!-- HEADER -->
+      <div class="header">
+        <div class="header-left">
+          <span class="hamburger"><i class="ph ph-list"></i></span>
+          <h2 id="pageTitle">Dashboard</h2>
         </div>
-        <div class="user-chip">
-          <div class="avatar"><i class="ph ph-user"></i></div>
-          <div><b id="userName">Staff</b><span id="userRole">Role</span></div>
-        </div>
-      </div>
-
-      <!-- OVERVIEW -->
-      <section class="view active" id="view-overview">
-        <div class="grid cols-4" id="statsGrid"></div>
-        <div class="grid cols-2" style="margin-top:18px">
-          <div class="card pad-lg">
-            <div class="section-title">Turnout by Grade Level</div>
-            <div id="gradeTurnout"></div>
-          </div>
-          <div class="card pad-lg">
-            <div class="section-title">Election Status</div>
-            <div id="statusPanel"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- CANDIDATES -->
-      <section class="view" id="view-candidates">
-        <div class="toolbar">
-          <input class="input-inline grow" id="candSearch" placeholder="Search candidate, position, or party..." />
-          <a class="btn btn-ghost" href="print.html?type=candidates" target="_blank"><i class="ph ph-printer"></i> Print</a>
-          <button class="btn btn-primary" style="width:auto" onclick="openCandidate()"><i class="ph ph-plus"></i> Add Candidate</button>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Photo</th><th>Name</th><th>Position</th><th>Party</th><th>Year</th><th>Actions</th></tr></thead>
-            <tbody id="candBody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- STUDENTS -->
-      <section class="view" id="view-students">
-        <div class="toolbar">
-          <input class="input-inline grow" id="stuSearch" placeholder="Search name, code, grade, or section..." />
-          <select class="input-inline" id="stuFilterGrade" style="max-width:150px">
-            <option value="">All grades</option>
-            <option>Grade 7</option><option>Grade 8</option><option>Grade 9</option>
-            <option>Grade 10</option><option>Grade 11</option><option>Grade 12</option>
-          </select>
-          <a class="btn btn-ghost" href="print.html?type=students" target="_blank"><i class="ph ph-printer"></i> Masterlist</a>
-          <a class="btn btn-ghost" href="print.html?type=codes" target="_blank"><i class="ph ph-qr-code"></i> Code Slips</a>
-          <button class="btn btn-ghost" onclick="openModal('bulkModal')"><i class="ph ph-upload-simple"></i> Bulk Import</button>
-          <button class="btn btn-primary" style="width:auto" onclick="openStudent()"><i class="ph ph-plus"></i> Add Student</button>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Code</th><th>Name</th><th>Grade</th><th>Section</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="stuBody"></tbody>
-          </table>
-        </div>
-        <div style="display:flex;justify-content:center;margin-top:14px">
-          <button class="btn btn-ghost" id="stuMore" style="display:none" onclick="loadMoreStudents()">Show more</button>
-        </div>
-        <p class="muted" id="stuCount" style="text-align:center;font-size:12.5px;margin-top:8px"></p>
-      </section>
-
-      <!-- ACCOUNTS -->
-      <section class="view" id="view-accounts">
-        <div class="toolbar">
-          <input class="input-inline grow" id="accSearch" placeholder="Search staff name or username..." />
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
-            <tbody id="accBody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- LOGIN LOG -->
-      <section class="view" id="view-loginlog">
-        <div class="toolbar">
-          <input class="input-inline grow" id="logSearch" placeholder="Search username, name, or action..." />
-          <button class="btn btn-ghost" onclick="renderLoginLog()"><i class="ph ph-arrows-clockwise"></i> Refresh</button>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>When</th><th>Account</th><th>Name</th><th>Role</th><th>Action</th></tr></thead>
-            <tbody id="logBody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- SETTINGS -->
-      <section class="view" id="view-settings">
-        <div class="grid cols-2">
-          <div class="card pad-lg">
-            <div class="section-title">Election Settings</div>
-            <label class="lbl">School Name</label>
-            <input class="input-inline" id="setSchool" style="margin-bottom:12px" />
-            <label class="lbl">Election Name</label>
-            <input class="input-inline" id="setElection" style="margin-bottom:12px" />
-            <label class="lbl">Academic Year</label>
-            <input class="input-inline" id="setYear" style="margin-bottom:12px" />
-            <label class="lbl">Representative Voting</label>
-            <select class="input-inline" id="setRepsRule" style="margin-bottom:12px">
-              <option value="own">Students vote for their own grade's representative</option>
-              <option value="next">Students vote for the next grade's representative</option>
-            </select>
-            <label class="lbl">Status</label>
-            <select class="input-inline" id="setVoting" style="margin-bottom:12px">
-              <option value="true">Voting OPEN</option>
-              <option value="false">Voting CLOSED</option>
-            </select>
-            <label class="lbl">Public Results</label>
-            <select class="input-inline" id="setResultsPublic" style="margin-bottom:16px">
-              <option value="false">Staff only</option>
-              <option value="true">Anyone with the link</option>
-            </select>
-            <button class="btn btn-primary" style="width:auto" onclick="saveSettingsForm()"><i class="ph ph-floppy-disk"></i> Save Settings</button>
-          </div>
-          <div class="card pad-lg">
-            <div class="section-title">Election Setup</div>
-            <p class="muted" style="font-size:12.5px;margin-bottom:14px">Manage positions, parties, academic years, and sections.</p>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
-              <button class="btn btn-ghost btn-sm" onclick="manageLookup('positions')"><i class="ph ph-seal-check"></i> Positions</button>
-              <button class="btn btn-ghost btn-sm" onclick="manageLookup('parties')"><i class="ph ph-flag"></i> Parties</button>
-              <button class="btn btn-ghost btn-sm" onclick="manageLookup('years')"><i class="ph ph-calendar"></i> Academic Years</button>
-              <button class="btn btn-ghost btn-sm" onclick="manageLookup('sections')"><i class="ph ph-chalkboard"></i> Sections</button>
+        <div class="header-right">
+          <div class="header-profile" id="header-profile">
+            <div class="header-avatar"><i class="ph ph-user"></i></div>
+            <span class="header-username" id="userName">Staff</span>
+            <div class="header-dropdown" id="header-dropdown">
+              <div class="header-dropdown-header">
+                <div class="header-dropdown-avatar"><i class="ph ph-user"></i></div>
+                <div class="header-dropdown-info">
+                  <span class="header-dropdown-name" id="ddName">Staff</span>
+                  <span class="header-dropdown-role" id="userRole">Role</span>
+                </div>
+              </div>
+              <div class="header-dropdown-divider"></div>
+              <button class="header-dropdown-item" onclick="openPassword()">
+                <i class="ph ph-key"></i><span>Change Password</span>
+              </button>
+              <button class="header-dropdown-item header-dropdown-logout" onclick="doLogout()">
+                <i class="ph ph-sign-out"></i><span>Log Out</span>
+              </button>
             </div>
-            <button class="btn btn-ghost btn-sm" onclick="seedDefaults()"><i class="ph ph-database"></i> Initialize Default Data</button>
-            <div class="section-title" style="margin-top:20px">Danger Zone</div>
-            <button class="btn btn-danger" style="width:auto" onclick="archiveNow()"><i class="ph ph-archive"></i> Archive Current Election</button>
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- ARCHIVE -->
-      <section class="view" id="view-archive">
-        <div id="archiveList"></div>
-      </section>
-    </main>
-  </div>
+      <!-- SIDEBAR -->
+      <div class="sidebar" id="sidebar">
+        <div class="header-sidebar">
+          <div class="divlogo">
+            <img src="assets/pictures/tcnhs_logo.png" alt="tcnhs logo">
+            <div class="flexingword">
+              <h1>Dashboard</h1>
+              <label class="fast">Fast-Result Electoral System</label>
+            </div>
+          </div>
+        </div>
+        <div>
+          <nav class="navigation">
+            <ul>
+              <li id="overview"><i class="fa fa-chart-line"></i> <span>Overview</span></li>
+              <li id="student" class="student">
+                <i class="fa-solid fa-user-graduate"></i><span>Students</span>
+                <i class="fa fa-caret-down dropdown-icon"></i>
+                <ul class="dropdown">
+                  <li id="registered"><i class="ph ph-table"></i>Registered Students</li>
+                  <li id="bulkimport"><i class="ph ph-file-csv"></i>Import Students</li>
+                  <li id="printstudent"><i class="ph ph-printer"></i>Print Students</li>
+                  <li id="votestudentcasted"><i class="ph ph-chart-bar"></i>Vote Casted</li>
+                </ul>
+              </li>
+              <li id="account"><i class="fa-solid fa-users"></i><span>Accounts</span></li>
+              <li id="candidate-sidebar"><i class="fa-solid fa-user-tie"></i><span>Candidates</span></li>
+              <li id="gotoresult"><i class="fa-solid fa-square-poll-horizontal"></i><span>Results</span></li>
+              <li id="manage_election"><i class="fa-solid fa-gear"></i><span>Manage Election</span></li>
+              <li id="election-history"><i class="fa-solid fa-clock-rotate-left"></i><span>Election History</span></li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      <!-- MAIN -->
+      <div class="main">
+
+        <!-- OVERVIEW -->
+        <div class="overview-card" id="overview-card">
+          <h2 class="header-h2-1">OVERVIEW</h2>
+          <p class="viewview">View real-time voting progress.</p>
+          <div class="stats-grid" id="statsGrid"></div>
+          <div class="charts-grid">
+            <div class="chart-card">
+              <h3 class="chart-card-title">Turnout by Grade Level</h3>
+              <div id="gradeTurnout" class="grade-list"></div>
+            </div>
+            <div class="chart-card">
+              <h3 class="chart-card-title">Election Status</h3>
+              <div id="statusPanel"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- REGISTERED STUDENTS -->
+        <div class="student-card" id="student-card" style="display:none">
+          <h2 class="header-h2">REGISTERED STUDENTS</h2>
+          <p class="viewview">Manageable list of registered students</p>
+          <div class="searchbar">
+            <input type="text" id="search-student" placeholder="Search student....">
+            <i class="ph ph-magnifying-glass"></i>
+            <div class="buttons-search">
+              <button onclick="openStudent()" class="register"><i class="ph ph-user-plus"></i>Registration</button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table id="table-student">
+              <thead>
+                <tr>
+                  <th>EDIT</th>
+                  <th>ID</th>
+                  <th>VERIFICATION CODE</th>
+                  <th>QR CODE</th>
+                  <th>FIRST NAME</th>
+                  <th>MIDDLE INITIAL</th>
+                  <th>LAST NAME</th>
+                  <th>GENDER</th>
+                  <th>GRADE LEVEL</th>
+                  <th>SECTION</th>
+                  <th>VOTE STATUS</th>
+                  <th>DELETE</th>
+                </tr>
+              </thead>
+              <tbody id="table-body-student"></tbody>
+            </table>
+          </div>
+          <div style="display:flex;justify-content:center;margin-top:14px">
+            <button class="register" id="stuMore" style="display:none" onclick="loadMoreStudents()">Show more</button>
+          </div>
+          <p class="viewview" id="stuCount" style="text-align:center;margin-top:8px"></p>
+        </div>
+
+        <!-- VOTE CASTED -->
+        <div class="student-card-vote-status" id="student-card-vote-status" style="display:none">
+          <h2 class="header-h2">VOTE CASTED</h2>
+          <p class="viewview">List of students who have cast their vote</p>
+          <div class="table-container-vote-status">
+            <table id="table-student-vote-status">
+              <thead>
+                <tr>
+                  <th>VERIFICATION CODE</th>
+                  <th>FIRST NAME</th>
+                  <th>MIDDLE INITIAL</th>
+                  <th>LAST NAME</th>
+                  <th>GENDER</th>
+                  <th>GRADE LEVEL</th>
+                  <th>SECTION</th>
+                  <th>VOTE STATUS</th>
+                </tr>
+              </thead>
+              <tbody id="table-body-casted"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ACCOUNTS -->
+        <div class="account-card" id="account-card" style="display:none">
+          <h2 class="header-h2">ACCOUNTS</h2>
+          <p class="viewview">Click the button in the table to approve user accounts.</p>
+          <div class="searchbar">
+            <input type="text" id="search-account" placeholder="Search account....">
+            <i class="ph ph-magnifying-glass"></i>
+            <div class="buttons-search">
+              <button onclick="showLoginLog()" class="history"><i class="ph ph-clock-user"></i>History</button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table id="table-account">
+              <thead>
+                <tr>
+                  <th>EDIT</th>
+                  <th>NAME</th>
+                  <th>USERNAME</th>
+                  <th>STATUS</th>
+                  <th>ACCESS</th>
+                  <th>CREATED</th>
+                  <th>DELETE</th>
+                </tr>
+              </thead>
+              <tbody id="table-body-account"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- LOGIN HISTORY -->
+        <div class="account-card" id="loginlog-card" style="display:none">
+          <h2 class="header-h2">LOGIN HISTORY</h2>
+          <p class="viewview">Recent staff sign-ins</p>
+          <div class="searchbar">
+            <input type="text" id="search-log" placeholder="Search account or action....">
+            <i class="ph ph-magnifying-glass"></i>
+            <div class="buttons-search">
+              <button onclick="showAccounts()" class="history"><i class="ph ph-arrow-left"></i>Back</button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table id="table-log">
+              <thead>
+                <tr><th>WHEN</th><th>ACCOUNT</th><th>NAME</th><th>ROLE</th><th>ACTION</th></tr>
+              </thead>
+              <tbody id="table-body-log"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- CANDIDATES -->
+        <div class="candidates" id="candidate-card" style="display:none">
+          <h2 class="header-h2">OFFICIAL CANDIDATES</h2>
+          <p class="viewview">Registered candidates for the upcoming election</p>
+          <div class="searchbar">
+            <input type="text" id="search-candidate" placeholder="Search candidates....">
+            <i class="ph ph-magnifying-glass"></i>
+            <div class="buttons-search">
+              <button onclick="window.open('print.html?type=candidates','_blank')" class="history"><i class="ph ph-printer"></i>Print</button>
+              <button onclick="openCandidate()" class="register"><i class="ph ph-user-plus"></i>Candidates Registration</button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table id="table-candidate">
+              <thead>
+                <tr>
+                  <th>EDIT</th>
+                  <th>PHOTO</th>
+                  <th>CANDIDATE NAME</th>
+                  <th>POSITION</th>
+                  <th>PARTY</th>
+                  <th>ACADEMIC YEAR</th>
+                  <th>DELETE</th>
+                </tr>
+              </thead>
+              <tbody id="table-body-candidate"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- BULK IMPORT -->
+        <div class="student-card" id="bulk-import-card" style="display:none">
+          <h2 class="header-h2">IMPORT STUDENTS</h2>
+          <p class="viewview">Import students via CSV file or paste rows</p>
+          <div style="padding:24px;width:100%;box-sizing:border-box">
+            <div class="bulk-drop">
+              <i class="ph ph-file-csv" style="font-size:48px;color:#6366F1;margin-bottom:12px;display:block"></i>
+              <h3 style="font-family:Inter,sans-serif;font-size:16px;font-weight:700;color:#0F172A;margin:0 0 8px">Upload CSV File</h3>
+              <p style="font-family:Inter,sans-serif;font-size:12px;color:#64748B;margin:0 0 4px"><b>CSV COLUMNS:</b> FIRST NAME, MIDDLE INITIAL, LAST NAME, GENDER, GRADE LEVEL, SECTION &nbsp;|&nbsp; VERIFICATION CODE AND QR CODE WILL BE AUTOMATICALLY GENERATED.</p>
+              <p style="font-family:Inter,sans-serif;font-size:12px;color:#EF4444;font-weight:700;margin:0 0 16px">NOTE: FIRST NAME, MIDDLE INITIAL, LAST NAME, AND SECTION SHOULD BE IN UPPERCASE TO AVOID IMPORTING ERRORS.</p>
+              <input type="file" id="bulkFile" accept=".csv,text/csv" style="display:none">
+              <button type="button" onclick="document.getElementById('bulkFile').click();" class="register" style="margin:0 auto 12px">
+                <i class="ph ph-upload-simple"></i> Choose CSV File
+              </button>
+              <p id="csvFileName" style="font-family:Inter,sans-serif;font-size:12px;color:#64748B;margin:0 0 8px"></p>
+              <textarea class="bulk-textarea" id="bulkText" placeholder="Juan, D, Dela Cruz, Male, Grade 7, Sampaguita&#10;Maria, S, Reyes, Female, Grade 8, Rizal"></textarea>
+              <button type="button" onclick="downloadTemplate()" style="font-family:Inter,sans-serif;font-size:12px;font-weight:500;color:#6366F1;background:none;border:none;cursor:pointer;text-decoration:underline;margin-top:8px">
+                Download CSV Template
+              </button>
+            </div>
+            <div class="alert" id="bulkAlert"></div>
+            <div style="display:flex;gap:10px;justify-content:flex-end">
+              <button type="button" class="register" style="background:#F1F5F9;color:#64748B" onclick="resetImport()">Clear</button>
+              <button type="button" id="bulkSave" class="register" onclick="importBulk()"><i class="ph ph-download-simple"></i> Import Students</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MANAGE ELECTION (one) -->
+        <div class="manage-election" id="manage-e-one" style="display:none">
+          <div class="add-section card">
+            <h2>ADD PARTY</h2>
+            <div class="input-party">
+              <input type="text" id="add-party" placeholder="Enter new party">
+              <button type="button" onclick="addPartyInline()">Save</button>
+            </div>
+            <div class="table-container-party">
+              <table class="table-section">
+                <thead><tr><th>EDIT</th><th>PARTY</th><th>DELETE</th></tr></thead>
+                <tbody id="party-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="add-section card">
+            <h2>ADD POSITION</h2>
+            <div class="input-party">
+              <select id="add-pos-scope" style="max-width:150px"></select>
+              <input type="number" id="add-pos-slots" value="1" min="1" style="max-width:90px">
+              <input type="text" id="add-pos-name" placeholder="Enter new position">
+              <button type="button" onclick="addPositionInline()">Save</button>
+            </div>
+            <div class="table-container-party">
+              <table class="table-section">
+                <thead><tr><th>EDIT</th><th>POSITION</th><th>SLOTS</th><th>DELETE</th></tr></thead>
+                <tbody id="position-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- MANAGE ELECTION (two) -->
+        <div class="manage-election" id="manage-e-two" style="display:none">
+          <div class="add-section card">
+            <h2>ADD ELECTION YEAR</h2>
+            <div class="input-party">
+              <input type="text" id="add-year" placeholder="Enter new academic year">
+              <button type="button" onclick="addYearInline()">Save</button>
+            </div>
+            <div class="table-container-party">
+              <table class="table-section">
+                <thead><tr><th>EDIT</th><th>ELECTION YEAR</th><th>DELETE</th></tr></thead>
+                <tbody id="year-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="add-section card">
+            <h2>ADD SECTION</h2>
+            <div class="input-party">
+              <select id="add-sec-grade" class="gradelevelinsection">
+                <option value="" selected disabled>Select Grade Level</option>
+                <option value="Grade 7">Grade 7</option>
+                <option value="Grade 8">Grade 8</option>
+                <option value="Grade 9">Grade 9</option>
+                <option value="Grade 10">Grade 10</option>
+                <option value="Grade 11">Grade 11</option>
+                <option value="Grade 12">Grade 12</option>
+              </select>
+              <input type="text" id="add-sec-name" placeholder="Enter new section">
+              <button type="button" onclick="addSectionInline()">Save</button>
+            </div>
+            <div class="table-container-party">
+              <table class="table-section">
+                <thead><tr><th>EDIT</th><th>GRADE LEVEL</th><th>SECTION</th><th>DELETE</th></tr></thead>
+                <tbody id="section-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ELECTION SETTINGS -->
+        <div class="manage-election" id="manage-e-three" style="display:none">
+          <div class="add-section card" style="max-width:640px">
+            <h2>ELECTION SETTINGS</h2>
+            <div style="padding:20px 4px;display:flex;flex-direction:column;gap:14px">
+              <div><label class="viewview" style="display:block;margin-bottom:6px">School Name</label><input class="input-inline" id="setSchool"></div>
+              <div><label class="viewview" style="display:block;margin-bottom:6px">Election Name</label><input class="input-inline" id="setElection"></div>
+              <div><label class="viewview" style="display:block;margin-bottom:6px">Academic Year</label><input class="input-inline" id="setYear"></div>
+              <div><label class="viewview" style="display:block;margin-bottom:6px">Representative Voting</label>
+                <select class="input-inline" id="setRepsRule">
+                  <option value="own">Students vote for their own grade's representative</option>
+                  <option value="next">Students vote for the next grade's representative</option>
+                </select>
+              </div>
+              <div><label class="viewview" style="display:block;margin-bottom:6px">Voting Status</label>
+                <select class="input-inline" id="setVoting">
+                  <option value="true">Voting OPEN</option>
+                  <option value="false">Voting CLOSED</option>
+                </select>
+              </div>
+              <div><label class="viewview" style="display:block;margin-bottom:6px">Public Results</label>
+                <select class="input-inline" id="setResultsPublic">
+                  <option value="false">Staff only</option>
+                  <option value="true">Anyone with the link</option>
+                </select>
+              </div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="register" onclick="saveSettingsForm()"><i class="ph ph-floppy-disk"></i> Save Settings</button>
+                <button class="register" style="background:#EF4444" onclick="archiveNow()"><i class="ph ph-archive"></i> Archive Current Election</button>
+                <button class="register" style="background:#64748B" onclick="seedDefaults()"><i class="ph ph-database"></i> Initialize Default Data</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ELECTION HISTORY -->
+        <div class="student-card" id="election-history-card" style="display:none">
+          <h2 class="header-h2">ELECTION HISTORY</h2>
+          <p class="viewview">View and manage archived election results</p>
+          <div class="table-container">
+            <table id="table-archive">
+              <thead>
+                <tr>
+                  <th>ELECTION NAME</th>
+                  <th>ACADEMIC YEAR</th>
+                  <th>REGISTERED</th>
+                  <th>VOTED</th>
+                  <th>DATE ARCHIVED</th>
+                  <th>ACTIONS</th>
+                </tr>
+              </thead>
+              <tbody id="archive-list-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /main -->
+    </div><!-- /layout -->
+  </div><!-- /app -->
+
+  <!-- ===================== MODALS ===================== -->
 
   <!-- CANDIDATE MODAL -->
   <div class="modal" id="candidateModal">
@@ -227,7 +456,7 @@
         <div><label class="lbl">Last Name</label><input class="input-inline" id="stuLast" /></div>
       </div>
       <div class="grid cols-2" style="gap:12px;margin-top:12px">
-        <div><label class="lbl">Middle Name</label><input class="input-inline" id="stuMiddle" /></div>
+        <div><label class="lbl">Middle Initial</label><input class="input-inline" id="stuMiddle" maxlength="2" /></div>
         <div><label class="lbl">Gender</label>
           <select class="input-inline" id="stuGender"><option value="">Select</option><option>Male</option><option>Female</option></select>
         </div>
@@ -251,36 +480,6 @@
         <button class="btn btn-ghost" onclick="closeModal('studentModal')">Cancel</button>
         <button class="btn btn-primary" style="width:auto" id="stuSave" onclick="saveStudent()">Save Student</button>
       </div>
-    </div>
-  </div>
-
-  <!-- BULK IMPORT MODAL -->
-  <div class="modal" id="bulkModal">
-    <div class="modal-box">
-      <h3>Bulk Import Students</h3>
-      <p class="modal-sub">Upload a CSV file or paste rows. Columns: <code>FirstName, MiddleName, LastName, Gender, Grade 7, Section, Code</code>. Code is optional and auto-generated when blank.</p>
-      <input type="file" id="bulkFile" accept=".csv,text/csv" class="input-inline" style="margin-bottom:10px" />
-      <textarea class="input-inline" id="bulkText" style="min-height:180px" placeholder="Juan, Dela, Cruz, Male, Grade 7, Sampaguita, 100023&#10;Maria, Santos, Reyes, Female, Grade 8, Rizal, "></textarea>
-      <div class="alert" id="bulkAlert"></div>
-      <div class="modal-actions">
-        <button class="btn btn-ghost" onclick="closeModal('bulkModal')">Cancel</button>
-        <button class="btn btn-primary" style="width:auto" id="bulkSave" onclick="importBulk()">Import Students</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- LOOKUP MODAL -->
-  <div class="modal" id="lookupModal">
-    <div class="modal-box">
-      <h3 id="lookupTitle">Manage</h3>
-      <p class="modal-sub">Add, rename, or remove entries.</p>
-      <div id="lookupExtra"></div>
-      <div style="display:flex;gap:8px;margin-bottom:14px">
-        <input class="input-inline" id="lookupInput" placeholder="New entry..." />
-        <button class="btn btn-primary" style="width:auto" onclick="addLookupEntry()"><i class="ph ph-plus"></i></button>
-      </div>
-      <div id="lookupList"></div>
-      <div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal('lookupModal')">Close</button></div>
     </div>
   </div>
 
@@ -346,6 +545,16 @@
     </div>
   </div>
 
+  <!-- QR MODAL -->
+  <div id="qr-pop" class="qr-modal">
+    <div class="qr-modal-content">
+      <span class="qr-close" onclick="closeQr()"><i class="ph ph-x"></i></span>
+      <div id="qr-picture"></div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script type="module" src="js/dashboard.js"></script>
 </body>
+
 </html>
