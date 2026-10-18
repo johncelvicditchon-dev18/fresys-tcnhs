@@ -102,15 +102,43 @@
         <div class="overview-card" id="overview-card">
           <h2 class="header-h2-1">OVERVIEW</h2>
           <p class="viewview">View real-time voting progress.</p>
-          <div class="stats-grid" id="statsGrid"></div>
+
+          <div class="chart-card" style="margin-bottom:16px">
+            <h3 class="chart-card-title">Turnout by Grade Level</h3>
+            <div style="height:320px;width:100%;position:relative">
+              <canvas id="chartGradeTurnout"></canvas>
+            </div>
+          </div>
+
           <div class="charts-grid">
             <div class="chart-card">
-              <h3 class="chart-card-title">Turnout by Grade Level</h3>
-              <div id="gradeTurnout" class="grade-list"></div>
+              <h3 class="chart-card-title">Students</h3>
+              <div class="chart-card-body"><canvas id="chartStudents"></canvas></div>
+              <div class="chart-legend-custom" id="legendStudents"></div>
             </div>
+
             <div class="chart-card">
-              <h3 class="chart-card-title">Election Status</h3>
-              <div id="statusPanel"></div>
+              <h3 class="chart-card-title">Overall Vote Status</h3>
+              <div class="chart-card-body"><canvas id="chartVoteStatus"></canvas></div>
+              <div class="chart-legend-custom" id="legendVoteStatus"></div>
+            </div>
+
+            <div class="chart-card">
+              <h3 class="chart-card-title">Registered Students Categorize By gender</h3>
+              <div class="chart-card-body"><canvas id="chartGender"></canvas></div>
+              <div class="chart-legend-custom" id="legendGender"></div>
+            </div>
+
+            <div class="chart-card">
+              <h3 class="chart-card-title">Votes by Gender</h3>
+              <div class="chart-card-body"><canvas id="chartGenderVote"></canvas></div>
+              <div class="chart-legend-custom" id="legendGenderVote"></div>
+            </div>
+
+            <div class="chart-card">
+              <h3 class="chart-card-title">Ballot Submission Breakdown</h3>
+              <div class="chart-card-body"><canvas id="chartEmptyBallot"></canvas></div>
+              <div class="chart-legend-custom" id="legendEmptyBallot"></div>
             </div>
           </div>
         </div>

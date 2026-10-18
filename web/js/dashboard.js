@@ -4,10 +4,12 @@ import * as D from "./data.js";
 import {
   $, $$, escapeHtml, toast, openModal, closeModal, btnLoading, fileToDataUrl, fmtDate, showAlert, hideAlert
 } from "./ui.js";
+import { initOverviewCharts, refreshOverviewCharts } from "./overview.js";
 
 let profile = null;
 let candidates = [];
 let students = [];
+let votes = [];
 let staffList = [];
 let positionsList = [];
 let partiesList = [];
@@ -59,10 +61,13 @@ async function main() {
   watchCandidates();
   if (isAdmin) watchStaff();
   watchOverview();
+  watchVotes();
   renderArchive();
 
   $("#loading").style.display = "none";
   $("#app").style.display = "";
+  initOverviewCharts();
+  renderOverview();
 }
 
 async function loadPositions() {
@@ -122,39 +127,32 @@ function watchOverview() {
   });
 }
 
+function watchVotes() {
+  onSnapshot(collection(db, "votes"), (snap) => {
+    votes = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    renderOverview();
+  });
+}
+
 function renderOverview() {
-  const registered = students.length;
+  const isSHS = (g) => g === "Grade 10" || g === "Grade 11" || g === "Grade 12";
+  const shs = students.filter((s) => isSHS(s.gradeLevel)).length;
+  const jhs = students.length - shs;
   const casted = students.filter((s) => s.voteStatus === "Casted").length;
-  const turnout = registered ? Math.round((casted / registered) * 1000) / 10 : 0;
-  if ($("#statsGrid")) $("#statsGrid").innerHTML = `
-    <div class="stat"><div class="ico"><i class="ph ph-users"></i></div><div class="val">${registered}</div><div class="lbl2">Registered Voters</div></div>
-    <div class="stat"><div class="ico"><i class="ph ph-check-square"></i></div><div class="val">${casted}</div><div class="lbl2">Ballots Cast</div></div>
-    <div class="stat"><div class="ico"><i class="ph ph-user-minus"></i></div><div class="val">${registered - casted}</div><div class="lbl2">Not Yet Voted</div></div>
-    <div class="stat"><div class="ico"><i class="ph ph-percent"></i></div><div class="val">${turnout}%</div><div class="lbl2">Turnout</div></div>`;
+  const available = students.length - casted;
+  const male = students.filter((s) => s.gender === "Male").length;
+  const female = students.filter((s) => s.gender === "Female").length;
+  const maleCasted = students.filter((s) => s.gender === "Male" && s.voteStatus === "Casted").length;
+  const femaleCasted = students.filter((s) => s.gender === "Female" && s.voteStatus === "Casted").length;
+  const empty = votes.filter((v) => !v.selections || v.selections.length === 0).length;
+  const withSel = Math.max(0, casted - empty);
 
-  const byGrade = {};
-  for (const g of D.GRADES) byGrade[g] = { reg: 0, cast: 0 };
-  for (const s of students) {
-    if (!byGrade[s.gradeLevel]) byGrade[s.gradeLevel] = { reg: 0, cast: 0 };
-    byGrade[s.gradeLevel].reg++;
-    if (s.voteStatus === "Casted") byGrade[s.gradeLevel].cast++;
-  }
-  if ($("#gradeTurnout")) $("#gradeTurnout").innerHTML = D.GRADES.map((g) => {
-    const d = byGrade[g] || { reg: 0, cast: 0 };
-    const pct = d.reg ? Math.round((d.cast / d.reg) * 100) : 0;
-    return `<div class="grade-row">
-      <div class="gl">${g}</div>
-      <div class="gbar"><div class="progress"><span style="width:${pct}%"></span></div></div>
-      <div class="gv"><b>${d.cast}</b>/${d.reg} &middot; ${pct}%</div>
-    </div>`;
-  }).join("");
+  const gradeTurnout = D.GRADES.map((g) => {
+    const all = students.filter((s) => s.gradeLevel === g);
+    return { grade: g, total: all.length, casted: all.filter((s) => s.voteStatus === "Casted").length };
+  });
 
-  if ($("#statusPanel")) $("#statusPanel").innerHTML = `
-    <div class="status-line"><span>Election</span><b>${escapeHtml(settings.electionName)}</b></div>
-    <div class="status-line"><span>Academic Year</span><b>${escapeHtml(settings.academicYear)}</b></div>
-    <div class="status-line"><span>Voting Status</span><b>${settings.votingOpen ? '<span class="badge badge-green">OPEN</span>' : '<span class="badge badge-red">CLOSED</span>'}</b></div>
-    <div class="status-line"><span>Results Visibility</span><b>${settings.resultsPublic ? '<span class="badge badge-blue">Public</span>' : '<span class="badge badge-amber">Staff only</span>'}</b></div>
-    <div class="status-line"><span>Registered Candidates</span><b>${candidates.length}</b></div>`;
+  refreshOverviewCharts({ shs, jhs, casted, available, male, female, maleCasted, femaleCasted, empty, withSel, gradeTurnout });
 }
 
 // ---------------------------------------------------------------- candidates

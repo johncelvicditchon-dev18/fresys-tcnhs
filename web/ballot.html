@@ -11,36 +11,6 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap">
   <style>
-    /* generic section styling (matches the grouped original selectors) so custom positions work too */
-    .candidate-section {
-      background: var(--card);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-      margin-bottom: 24px;
-    }
-    .candidate-section .headbox h2 {
-      font-family: 'Inter', sans-serif;
-      font-size: 15px;
-      font-weight: 700;
-      margin: 0;
-      color: var(--text-dark);
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-    .candidate-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-      justify-items: center;
-    }
-    /* first rendered section clears the fixed header */
-    .ballot-first {
-      margin-top: 110px;
-    }
     #loadingNotice {
       max-width: 1400px;
       margin: 120px auto;
@@ -48,14 +18,10 @@
       color: rgba(255, 255, 255, 0.6);
       font-family: 'Inter', system-ui, sans-serif;
     }
-    @media (max-width: 768px) {
-      .candidate-section { padding: 18px 16px; }
-      .candidate-section .headbox h2 { font-size: 13px; }
-    }
-    @media (max-width: 479px) {
-      .candidate-section { padding: 12px 10px; border-radius: 12px; margin-bottom: 16px; }
-      .candidate-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-      .ballot-first { margin-top: 240px; }
+    .empty-candidates {
+      color: rgba(255, 255, 255, 0.45);
+      font-size: 13px;
+      padding: 6px 2px;
     }
   </style>
 </head>
@@ -106,12 +72,135 @@
       </div>
     </header>
 
-    <!-- CANDIDATE SECTIONS (rendered by JS) -->
-    <div id="sections"></div>
+    <!-- PRESIDENT -->
+    <section class="president-box">
+      <div class="headbox">
+        <h2>PRESIDENT</h2>
+        <h2 id="president-count">0/1</h2>
+      </div>
+      <div class="presidents-box" data-position="President" data-slots="1"></div>
+    </section>
+
+    <!-- VICE-PRESIDENT -->
+    <section class="vice-president-box">
+      <div class="headbox">
+        <h2>VICE-PRESIDENT</h2>
+        <h2 id="vice-president-count">0/1</h2>
+      </div>
+      <div class="vice-presidents-box" data-position="Vice-President" data-slots="1"></div>
+    </section>
+
+    <!-- SECRETARY -->
+    <section class="secretary-box">
+      <div class="headbox">
+        <h2>SECRETARY</h2>
+        <h2 id="secretary-count">0/1</h2>
+      </div>
+      <div class="secretarys-box" data-position="Secretary" data-slots="1"></div>
+    </section>
+
+    <!-- TREASURER -->
+    <section class="treasurer-box">
+      <div class="headbox">
+        <h2>TREASURER</h2>
+        <h2 id="treasurer-count">0/1</h2>
+      </div>
+      <div class="treasurers-box" data-position="Treasurer" data-slots="1"></div>
+    </section>
+
+    <!-- AUDITOR -->
+    <section class="auditor-box">
+      <div class="headbox">
+        <h2>AUDITOR</h2>
+        <h2 id="auditor-count">0/1</h2>
+      </div>
+      <div class="auditors-box" data-position="Auditor" data-slots="1"></div>
+    </section>
+
+    <!-- P.I.O SHS -->
+    <section class="pioshs-box">
+      <div class="headbox">
+        <h2>P.I.O - SHS</h2>
+        <h2 id="pioshs-count">0/1</h2>
+      </div>
+      <div class="pios-shs-box" data-position="P.I.O(SHS)" data-slots="1"></div>
+    </section>
+
+    <!-- P.I.O JHS -->
+    <section class="piojhs-box">
+      <div class="headbox">
+        <h2>P.I.O - JHS</h2>
+        <h2 id="piojhs-count">0/1</h2>
+      </div>
+      <div class="pios-jhs-box" data-position="P.I.O(JHS)" data-slots="1"></div>
+    </section>
+
+    <!-- PROTOCOL OFFICER SHS -->
+    <section class="protocol-shs-box">
+      <div class="headbox">
+        <h2>PROTOCOL OFFICER - SHS</h2>
+        <h2 id="protocol-shs-count">0/1</h2>
+      </div>
+      <div class="protocols-shs-box" data-position="Protocol Officer(SHS)" data-slots="1"></div>
+    </section>
+
+    <!-- PROTOCOL OFFICER JHS -->
+    <section class="protocol-jhs-box">
+      <div class="headbox">
+        <h2>PROTOCOL OFFICER - JHS</h2>
+        <h2 id="protocol-jhs-count">0/1</h2>
+      </div>
+      <div class="protocols-jhs-box" data-position="Protocol Officer(JHS)" data-slots="1"></div>
+    </section>
+
+    <!-- GRADE 8 REPRESENTATIVE -->
+    <section class="grade-8-representative-box">
+      <div class="headbox">
+        <h2>GRADE 8 REPRESENTATIVE</h2>
+        <h2 id="grade-8-representative-count">0/2</h2>
+      </div>
+      <div class="grade-8-representatives-box" data-position="Grade 8 Representative" data-slots="2"></div>
+    </section>
+
+    <!-- GRADE 9 REPRESENTATIVE -->
+    <section class="grade-9-representative-box">
+      <div class="headbox">
+        <h2>GRADE 9 REPRESENTATIVE</h2>
+        <h2 id="grade-9-representative-count">0/2</h2>
+      </div>
+      <div class="grade-9-representatives-box" data-position="Grade 9 Representative" data-slots="2"></div>
+    </section>
+
+    <!-- GRADE 10 REPRESENTATIVE -->
+    <section class="grade-10-representative-box">
+      <div class="headbox">
+        <h2>GRADE 10 REPRESENTATIVE</h2>
+        <h2 id="grade-10-representative-count">0/2</h2>
+      </div>
+      <div class="grade-10-representatives-box" data-position="Grade 10 Representative" data-slots="2"></div>
+    </section>
+
+    <!-- GRADE 11 REPRESENTATIVE -->
+    <section class="grade-11-representative-box">
+      <div class="headbox">
+        <h2>GRADE 11 REPRESENTATIVE</h2>
+        <h2 id="grade-11-representative-count">0/2</h2>
+      </div>
+      <div class="grade-11-representatives-box" data-position="Grade 11 Representative" data-slots="2"></div>
+    </section>
+
+    <!-- GRADE 12 REPRESENTATIVE -->
+    <section class="grade-12-representative-box">
+      <div class="headbox">
+        <h2>GRADE 12 REPRESENTATIVE</h2>
+        <h2 id="grade-12-representative-count">0/2</h2>
+      </div>
+      <div class="grade-12-representatives-box" data-position="Grade 12 Representative" data-slots="2"></div>
+    </section>
 
     <section class="buttonnss">
       <div class="button-groups">
-        <button type="button" class="cancelvote" onclick="ballotLogout()">Cancel</button>
+        <button type="button" class="cancelvote" onclick="cancel()">Cancel</button>
         <button type="button" class="review" onclick="review()">Review your votes</button>
       </div>
     </section>
@@ -140,7 +229,72 @@
       <h2>REVIEW YOUR VOTES</h2>
 
       <div id="reviewBody" class="review-body">
-        <div class="section-group-vote" id="reviewGrid"></div>
+        <div class="first-group-vote">
+          <div class="review-category card">
+            <h3>PRESIDENT</h3>
+            <input type="text" id="review_president" readonly>
+          </div>
+          <div class="review-category card">
+            <h3>VICE-PRESIDENT</h3>
+            <input type="text" id="review_vice_president" readonly>
+          </div>
+          <div class="review-category card">
+            <h3>SECRETARY</h3>
+            <input type="text" id="review_secretary" readonly>
+          </div>
+          <div class="review-category card">
+            <h3>TREASURER</h3>
+            <input type="text" id="review_treasurer" readonly>
+          </div>
+        </div>
+
+        <div class="section-group-vote">
+          <div class="review-category card">
+            <h3>AUDITOR</h3>
+            <input type="text" id="review_auditor" readonly>
+          </div>
+          <div class="review-category card" id="cardpio-shs">
+            <h3>P.I.O - SHS</h3>
+            <input type="text" id="review_pio_shs" readonly>
+          </div>
+          <div class="review-category card" id="cardpio-jhs">
+            <h3>P.I.O - JHS</h3>
+            <input type="text" id="review_pio_jhs" readonly>
+          </div>
+          <div class="review-category card" id="cardprotocol-shs">
+            <h3>PROTOCOL OFFICER - SHS</h3>
+            <input type="text" id="review_protocol_shs" readonly>
+          </div>
+          <div class="review-category card" id="cardprotocol-jhs">
+            <h3>PROTOCOL OFFICER - JHS</h3>
+            <input type="text" id="review_protocol_jhs" readonly>
+          </div>
+          <div class="review-category card" id="card-grade8">
+            <h3>GRADE 8 REPRESENTATIVE</h3>
+            <input type="text" id="review_grade8_1" readonly>
+            <input type="text" id="review_grade8_2" readonly>
+          </div>
+          <div class="review-category card" id="card-grade9">
+            <h3>GRADE 9 REPRESENTATIVE</h3>
+            <input type="text" id="review_grade9_1" readonly>
+            <input type="text" id="review_grade9_2" readonly>
+          </div>
+          <div class="review-category card" id="card-grade10">
+            <h3>GRADE 10 REPRESENTATIVE</h3>
+            <input type="text" id="review_grade10_1" readonly>
+            <input type="text" id="review_grade10_2" readonly>
+          </div>
+          <div class="review-category card" id="card-grade11">
+            <h3>GRADE 11 REPRESENTATIVE</h3>
+            <input type="text" id="review_grade11_1" readonly>
+            <input type="text" id="review_grade11_2" readonly>
+          </div>
+          <div class="review-category card" id="card-grade12">
+            <h3>GRADE 12 REPRESENTATIVE</h3>
+            <input type="text" id="review_grade12_1" readonly>
+            <input type="text" id="review_grade12_2" readonly>
+          </div>
+        </div>
       </div>
 
       <div class="review-actions">

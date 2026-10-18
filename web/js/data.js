@@ -60,7 +60,7 @@ export const DEFAULT_SETTINGS = {
   schoolName: "TANGUB CITY NATIONAL HIGH SCHOOL",
   electionName: "SUPREME STUDENT LEARNER GOVERNMENT ELECTION",
   academicYear: "2026-2027",
-  repsRule: "own",          // "own" = vote your grade rep, "next" = vote the next grade rep
+  repsRule: "next",         // original flow: a grade votes the NEXT grade's reps (Grade 12 votes none)
   resultsPublic: false,
   votingOpen: true
 };
@@ -346,7 +346,7 @@ export async function verifyStudent(code, gradeLevel) {
 // ---------------------------------------------------------------------------
 // Ballot composition (which positions a given grade votes for)
 // ---------------------------------------------------------------------------
-export function ballotPositionsForGrade(gradeLevel, repsRule = "own") {
+export function ballotPositionsForGrade(gradeLevel, repsRule = "next") {
   const idx = GRADES.indexOf(gradeLevel);
   const isJHS = idx >= 0 && idx <= 2;
   const positions = [...EXEC_POSITIONS, ...(isJHS ? JHS_POSITIONS : SHS_POSITIONS)];
@@ -367,7 +367,10 @@ export async function submitVotes(studentId, gradeLevel, selections) {
   const flat = [];
   for (const [position, picks] of Object.entries(selections || {})) {
     for (const p of picks || []) {
-      if (p && p.id) flat.push({ position, candidateId: p.id, candidateName: p.name || "" });
+      if (p == null) continue;
+      const candidateId = typeof p === "string" ? p : p.id;
+      const candidateName = typeof p === "object" ? (p.name || p.candidateName || "") : "";
+      if (candidateId) flat.push({ position, candidateId, candidateName });
     }
   }
   const batch = writeBatch(db);

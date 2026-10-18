@@ -49,7 +49,7 @@ async function attemptVerify(code, gradeLevel) {
       setTimeout(() => goBallot(res.student, code, gradeLevel), 600);
       return;
     }
-    if (res.reason === "alreadycasted") showMsg("This student has already cast a vote.", "error");
+    if (res.reason === "alreadycasted") showMsg("This verification code has already been used.", "error");
     else if (res.reason === "missing") showMsg("Please enter your verification code.", "error");
     else showMsg("Invalid code or grade level. Please check and try again.", "error");
   } catch (err) {
@@ -122,3 +122,11 @@ async function stopScanner() {
 
 // If already verified this session, jump straight in.
 onAuthStateChanged(auth, () => {});
+
+// Flash message carried over from the ballot (e.g. vote submitted).
+(function () {
+  let flash = null;
+  try { flash = JSON.parse(sessionStorage.getItem("fresys_flash") || "null"); } catch (_) {}
+  sessionStorage.removeItem("fresys_flash");
+  if (flash && flash.message) showMsg(flash.message, flash.type === "success" ? "success" : "error");
+})();
